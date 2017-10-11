@@ -13,4 +13,4 @@ init:
 
 clean:
 	$(MAKE) -C docs clean
-	rm -rf .cache build dist diffspot.egg-info diffspot.log
+	rm -rf .cache build dist closeup.egg-info closeup.log

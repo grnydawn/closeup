@@ -12,9 +12,9 @@ from shutil import rmtree
 from setuptools import find_packages, setup, Command
 
 # Package meta-data.
-NAME = 'diffspot'
+NAME = 'closeup'
 DESCRIPTION = 'Scientific Software Testing System. '
-URL = 'https://github.com/grnydawn/diffspot'
+URL = 'https://github.com/grnydawn/closeup'
 EMAIL = 'grnydawn@gmail.com'
 AUTHOR = 'Youngsung Kim'
 
@@ -88,7 +88,7 @@ setup(
     # py_modules=['mypackage'],
 
      entry_points={
-         'console_scripts': ['diffspot=diffspot.commands:main'],
+         'console_scripts': ['closeup=closeup.commands:main'],
      },
     install_requires=REQUIRED,
     include_package_data=True,

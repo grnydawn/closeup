@@ -1,10 +1,10 @@
-diffspot Module Repository
+closeup Module Repository
 ========================
 
-This diffspot project is an example repo for Python projects.
+This closeup project is an example repo for Python projects.
 
 `Learn more <http://my.web.site>`_.
 
 ---------------
 
-If you want to learn more about ``diffspot`` files, check out `this repository <https://github.com/myrepo>`_.
+If you want to learn more about ``closeup`` files, check out `this repository <https://github.com/myrepo>`_.
