@@ -2,18 +2,18 @@
 """
 
 import difflib, operator, os, stat, sys, time
-from .core import ( write_file, read_object, read_tree, read_index,
-    IndexEntry, write_index, write_tree, get_local_master_hash,
+from .core import ( write_file, read_object, read_tree, read_register,
+    RegisterEntry, write_register, write_tree, get_local_master_hash,
     get_remote_master_hash, find_missing_objects, build_lines_data,
     create_pack, http_request, extract_lines, hash_object )
 
 def init(repo):
-    """Create directory for repo and initialize .git directory."""
+    """Create directory for repo and initialize .closeup directory."""
     os.mkdir(repo)
-    os.mkdir(os.path.join(repo, '.git'))
+    os.mkdir(os.path.join(repo, '.closeup'))
     for name in ['objects', 'refs', 'refs/heads']:
-        os.mkdir(os.path.join(repo, '.git', name))
-    write_file(os.path.join(repo, '.git', 'HEAD'), b'ref: refs/heads/master')
+        os.mkdir(os.path.join(repo, '.closeup', name))
+    write_file(os.path.join(repo, '.closeup', 'HEAD'), b'ref: refs/heads/master')
     print('initialized empty repository: {}'.format(repo))
 
 
@@ -48,10 +48,10 @@ def cat_file(mode, sha1_prefix):
 
 
 def ls_files(details=False):
-    """Print list of files in index (including mode, SHA-1, and stage number
+    """Print list of files in register (including mode, SHA-1, and stage number
     if "details" is True).
     """
-    for entry in read_index():
+    for entry in read_register():
         if details:
             stage = (entry.flags >> 12) & 3
             print('{:6o} {} {:}\t{}'.format(
@@ -60,37 +60,37 @@ def ls_files(details=False):
             print(entry.path)
 
 
-def status():
-    """Show status of working copy."""
-    modified, untracted, deleted = get_status()
-    if modified:
-        print('modified files:')
-        for path in modified:
-            print('   ', path)
-    if untracted:
-        print('untracted files:')
-        for path in untracted:
-            print('   ', path)
-    if deleted:
-        print('deleted files:')
-        for path in deleted:
-            print('   ', path)
+#def status():
+#    """Show status of working copy."""
+#    modified, untracted, deleted = get_status()
+#    if modified:
+#        print('modified files:')
+#        for path in modified:
+#            print('   ', path)
+#    if untracted:
+#        print('untracted files:')
+#        for path in untracted:
+#            print('   ', path)
+#    if deleted:
+#        print('deleted files:')
+#        for path in deleted:
+#            print('   ', path)
 
 
 def diff():
-    """Show diff of files changed (between index and working copy)."""
+    """Show diff of images changed."""
     modified, _, _ = get_status()
-    entries_by_path = {e.path: e for e in read_index()}
+    entries_by_path = {e.path: e for e in read_register()}
     for i, path in enumerate(modified):
         sha1 = entries_by_path[path].sha1.hex()
         obj_type, data = read_object(sha1)
         assert obj_type == 'blob'
-        index_lines = data.decode().splitlines()
-        working_lines = read_file(path).decode().splitlines()
+        register_lines = data.decode().splitlines()
+        image_lines = read_file(path).decode().splitlines()
         diff_lines = difflib.unified_diff(
-                index_lines, working_lines,
-                '{} (index)'.format(path),
-                '{} (working copy)'.format(path),
+                register_lines, image_lines,
+                '{} (register)'.format(path),
+                '{} (image)'.format(path),
                 lineterm='')
         for line in diff_lines:
             print(line)
@@ -98,27 +98,29 @@ def diff():
             print('-' * 70)
 
 
-def add(paths):
-    """Add all file paths to git index."""
-    paths = [p.replace('\\', '/') for p in paths]
-    all_entries = read_index()
-    entries = [e for e in all_entries if e.path not in paths]
-    for path in paths:
-        sha1 = hash_object(read_file(path), 'blob')
-        st = os.stat(path)
-        flags = len(path.encode())
+def register(name, directions, dir_type):
+    """Add all directions to closeup register."""
+    #TODO: use configparser instead of custom binary format
+    if dir_type == 'path':
+        directions = [d.replace('\\', '/') for d in directions]
+    all_entries = read_register()
+    entries = [e for e in all_entries if e.direction not in directions]
+    for direction in directions:
+        sha1 = hash_object(read_file(direction), 'blob')
+        st = os.stat(direction)
+        flags = len(direction.encode())
         assert flags < (1 << 12)
-        entry = IndexEntry(
+        entry = RegisterEntry(
                 int(st.st_ctime), 0, int(st.st_mtime), 0, st.st_dev,
                 st.st_ino, st.st_mode, st.st_uid, st.st_gid, st.st_size,
-                bytes.fromhex(sha1), flags, path)
+                bytes.fromhex(sha1), flags, direction)
         entries.append(entry)
-    entries.sort(key=operator.attrgetter('path'))
-    write_index(entries)
+    entries.sort(key=operator.attrgetter('direction'))
+    write_register(entries)
 
 
 def commit(message, author=None):
-    """Commit the current state of the index to master with given message.
+    """Commit the current state of the register to master with given message.
     Return hash of commit object.
     """
     tree = write_tree()
@@ -143,19 +145,19 @@ def commit(message, author=None):
     lines.append('')
     data = '\n'.join(lines).encode()
     sha1 = hash_object(data, 'commit')
-    master_path = os.path.join('.git', 'refs', 'heads', 'master')
+    master_path = os.path.join('.closeup', 'refs', 'heads', 'master')
     write_file(master_path, (sha1 + '\n').encode())
     print('committed to master: {:7}'.format(sha1))
     return sha1
 
 
-def push(git_url, username=None, password=None):
-    """Push master branch to given git repo URL."""
+def push(closeup_url, username=None, password=None):
+    """Push master branch to given closeup repo URL."""
     if username is None:
         username = os.environ['GIT_USERNAME']
     if password is None:
         password = os.environ['GIT_PASSWORD']
-    remote_sha1 = get_remote_master_hash(git_url, username, password)
+    remote_sha1 = get_remote_master_hash(closeup_url, username, password)
     local_sha1 = get_local_master_hash()
     missing = find_missing_objects(local_sha1, remote_sha1)
     print('updating remote master from {} to {} ({} object{})'.format(
@@ -164,7 +166,7 @@ def push(git_url, username=None, password=None):
     lines = ['{} {} refs/heads/master\x00 report-status'.format(
             remote_sha1 or ('0' * 40), local_sha1).encode()]
     data = build_lines_data(lines) + create_pack(missing)
-    url = git_url + '/git-receive-pack'
+    url = closeup_url + '/closeup-receive-pack'
     response = http_request(url, username, password, data=data)
     lines = extract_lines(response)
     assert len(lines) >= 2, \

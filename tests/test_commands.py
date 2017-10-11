@@ -17,7 +17,12 @@ class TestCommands(unittest.TestCase):
         os.chdir(os.path.expanduser('~'))
         closeup.main(argv=['init', proj])
         os.chdir(proj)
-        self.assertTrue(os.path.exists(os.path.join(proj, '.git')))
+        self.assertTrue(os.path.exists(os.path.join(proj, '.closeup')))
 
+    def test_register(self):
+        self.test_init()
+        closeup.main(argv=['register', 'app1', prog])
+        #self.assertTrue(os.path.exists(os.path.join(proj, '.closeup')))
+        
 if __name__ == '__main__':
     unittest.main()

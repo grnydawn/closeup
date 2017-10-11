@@ -4,8 +4,8 @@
 import collections, enum, hashlib, os, stat
 import struct, urllib.request, zlib
 
-# Data for one entry in the git index (.git/index)
-IndexEntry = collections.namedtuple('IndexEntry', [
+# Data for one entry in the closeup register (.closeup/register)
+RegisterEntry = collections.namedtuple('RegisterEntry', [
     'ctime_s', 'ctime_n', 'mtime_s', 'mtime_n', 'dev', 'ino', 'mode', 'uid',
     'gid', 'size', 'sha1', 'flags', 'path',
 ])
@@ -13,7 +13,7 @@ IndexEntry = collections.namedtuple('IndexEntry', [
 
 class ObjectType(enum.Enum):
     """Object type enum. There are other types too, but we don't need them.
-    See "enum object_type" in git's source (git/cache.h).
+    See "enum object_type" in closeup's source (closeup/cache.h).
     """
     commit = 1
     tree = 2
@@ -40,7 +40,7 @@ def hash_object(data, obj_type, write=True):
     full_data = header + b'\x00' + data
     sha1 = hashlib.sha1(full_data).hexdigest()
     if write:
-        path = os.path.join('.git', 'objects', sha1[:2], sha1[2:])
+        path = os.path.join('.closeup', 'objects', sha1[:2], sha1[2:])
         if not os.path.exists(path):
             os.makedirs(os.path.dirname(path), exist_ok=True)
             write_file(path, zlib.compress(full_data))
@@ -54,7 +54,7 @@ def find_object(sha1_prefix):
     """
     if len(sha1_prefix) < 2:
         raise ValueError('hash prefix must be 2 or more characters')
-    obj_dir = os.path.join('.git', 'objects', sha1_prefix[:2])
+    obj_dir = os.path.join('.closeup', 'objects', sha1_prefix[:2])
     rest = sha1_prefix[2:]
     objects = [name for name in os.listdir(obj_dir) if name.startswith(rest)]
     if not objects:
@@ -80,18 +80,18 @@ def read_object(sha1_prefix):
             size, len(data))
     return (obj_type, data)
 
-def read_index():
-    """Read git index file and return list of IndexEntry objects."""
+def read_register():
+    """Read closeup register file and return list of RegisterEntry objects."""
     try:
-        data = read_file(os.path.join('.git', 'index'))
+        data = read_file(os.path.join('.closeup', 'register'))
     except FileNotFoundError:
         return []
     digest = hashlib.sha1(data[:-20]).digest()
-    assert digest == data[-20:], 'invalid index checksum'
+    assert digest == data[-20:], 'invalid register checksum'
     signature, version, num_entries = struct.unpack('!4sLL', data[:12])
     assert signature == b'DIRC', \
-            'invalid index signature {}'.format(signature)
-    assert version == 2, 'unknown index version {}'.format(version)
+            'invalid register signature {}'.format(signature)
+    assert version == 2, 'unknown register version {}'.format(version)
     entry_data = data[12:-20]
     entries = []
     i = 0
@@ -100,7 +100,7 @@ def read_index():
         fields = struct.unpack('!LLLLLLLLLL20sH', entry_data[i:fields_end])
         path_end = entry_data.index(b'\x00', fields_end)
         path = entry_data[fields_end:path_end]
-        entry = IndexEntry(*(fields + (path.decode(),)))
+        entry = RegisterEntry(*(fields + (path.decode(),)))
         entries.append(entry)
         entry_len = ((62 + len(path) + 8) // 8) * 8
         i += entry_len
@@ -108,38 +108,38 @@ def read_index():
     return entries
 
 
-def get_status():
-    """Get status of working copy, return tuple of (changed_paths, new_paths,
-    deleted_paths).
-    """
-    paths = set()
-    for root, dirs, files in os.walk('.'):
-        dirs[:] = [d for d in dirs if d != '.git']
-        for file in files:
-            path = os.path.join(root, file)
-            path = path.replace('\\', '/')
-            if path.startswith('./'):
-                path = path[2:]
-            paths.add(path)
-    entries_by_path = {e.path: e for e in read_index()}
-    entry_paths = set(entries_by_path)
+#def get_status():
+#    """Get status of working copy, return tuple of (changed_paths, new_paths,
+#    deleted_paths).
+#    """
+#    paths = set()
+#    for root, dirs, files in os.walk('.'):
+#        dirs[:] = [d for d in dirs if d != '.closeup']
+#        for file in files:
+#            path = os.path.join(root, file)
+#            path = path.replace('\\', '/')
+#            if path.startswith('./'):
+#                path = path[2:]
+#            paths.add(path)
+#    entries_by_path = {e.path: e for e in read_register()}
+#    entry_paths = set(entries_by_path)
+#
+#    staged = set()
+#    for p in (paths & entry_paths):
+#        try:
+#            find_object(hash_object(read_file(p), 'blob', write=False))
+#        except FileNotFoundError as e:
+#            import pdb; pdb.set_trace()
+#
+#    modified = {p for p in (paths & entry_paths)
+#               if hash_object(read_file(p), 'blob', write=False) !=
+#                  entries_by_path[p].sha1.hex()}
+#    untracted = paths - entry_paths
+#    deleted = entry_paths - paths
+#    return (sorted(modified), sorted(untracted), sorted(deleted))
 
-    staged = set()
-    for p in (paths & entry_paths):
-        try:
-            find_object(hash_object(read_file(p), 'blob', write=False))
-        except FileNotFoundError as e:
-            import pdb; pdb.set_trace()
-
-    modified = {p for p in (paths & entry_paths)
-               if hash_object(read_file(p), 'blob', write=False) !=
-                  entries_by_path[p].sha1.hex()}
-    untracted = paths - entry_paths
-    deleted = entry_paths - paths
-    return (sorted(modified), sorted(untracted), sorted(deleted))
-
-def write_index(entries):
-    """Write list of IndexEntry objects to git index file."""
+def write_register(entries):
+    """Write list of RegisterEntry objects to closeup register file."""
     packed_entries = []
     for entry in entries:
         entry_head = struct.pack('!LLLLLLLLLL20sH',
@@ -153,12 +153,12 @@ def write_index(entries):
     header = struct.pack('!4sLL', b'DIRC', 2, len(entries))
     all_data = header + b''.join(packed_entries)
     digest = hashlib.sha1(all_data).digest()
-    write_file(os.path.join('.git', 'index'), all_data + digest)
+    write_file(os.path.join('.closeup', 'register'), all_data + digest)
 
 def write_tree():
-    """Write a tree object from the current index entries."""
+    """Write a tree object from the current register entries."""
     tree_entries = []
-    for entry in read_index():
+    for entry in read_register():
         assert '/' not in entry.path, \
                 'currently only supports a single, top-level directory'
         mode_path = '{:o} {}'.format(entry.mode, entry.path).encode()
@@ -169,7 +169,7 @@ def write_tree():
 
 def get_local_master_hash():
     """Get current commit hash (SHA-1 string) of local master branch."""
-    master_path = os.path.join('.git', 'refs', 'heads', 'master')
+    master_path = os.path.join('.closeup', 'refs', 'heads', 'master')
     try:
         return read_file(master_path).decode().strip()
     except FileNotFoundError:
@@ -215,14 +215,14 @@ def http_request(url, username, password, data=None):
     return f.read()
 
 
-def get_remote_master_hash(git_url, username, password):
+def get_remote_master_hash(closeup_url, username, password):
     """Get commit hash of remote master branch, return SHA-1 hex string or
     None if no remote commits.
     """
-    url = git_url + '/info/refs?service=git-receive-pack'
+    url = closeup_url + '/info/refs?service=closeup-receive-pack'
     response = http_request(url, username, password)
     lines = extract_lines(response)
-    assert lines[0] == b'# service=git-receive-pack\n'
+    assert lines[0] == b'# service=closeup-receive-pack\n'
     assert lines[1] == b''
     if lines[2][:40] == b'0' * 40:
         return None
