@@ -23,6 +23,5 @@ class TestCommands(unittest.TestCase):
         self.test_init()
         closeup.main(argv=['register', 'app1', prog])
         #self.assertTrue(os.path.exists(os.path.join(proj, '.closeup')))
-        
 if __name__ == '__main__':
     unittest.main()

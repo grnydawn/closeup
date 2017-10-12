@@ -15,9 +15,9 @@ class ObjectType(enum.Enum):
     """Object type enum. There are other types too, but we don't need them.
     See "enum object_type" in closeup's source (closeup/cache.h).
     """
-    commit = 1
-    tree = 2
-    blob = 3
+    path = 1
+    command = 2
+    variable = 3
 
 
 def read_file(path):
@@ -80,33 +80,6 @@ def read_object(sha1_prefix):
             size, len(data))
     return (obj_type, data)
 
-def read_register():
-    """Read closeup register file and return list of RegisterEntry objects."""
-    try:
-        data = read_file(os.path.join('.closeup', 'register'))
-    except FileNotFoundError:
-        return []
-    digest = hashlib.sha1(data[:-20]).digest()
-    assert digest == data[-20:], 'invalid register checksum'
-    signature, version, num_entries = struct.unpack('!4sLL', data[:12])
-    assert signature == b'DIRC', \
-            'invalid register signature {}'.format(signature)
-    assert version == 2, 'unknown register version {}'.format(version)
-    entry_data = data[12:-20]
-    entries = []
-    i = 0
-    while i + 62 < len(entry_data):
-        fields_end = i + 62
-        fields = struct.unpack('!LLLLLLLLLL20sH', entry_data[i:fields_end])
-        path_end = entry_data.index(b'\x00', fields_end)
-        path = entry_data[fields_end:path_end]
-        entry = RegisterEntry(*(fields + (path.decode(),)))
-        entries.append(entry)
-        entry_len = ((62 + len(path) + 8) // 8) * 8
-        i += entry_len
-    assert len(entries) == num_entries
-    return entries
-
 
 #def get_status():
 #    """Get status of working copy, return tuple of (changed_paths, new_paths,
@@ -137,23 +110,6 @@ def read_register():
 #    untracted = paths - entry_paths
 #    deleted = entry_paths - paths
 #    return (sorted(modified), sorted(untracted), sorted(deleted))
-
-def write_register(entries):
-    """Write list of RegisterEntry objects to closeup register file."""
-    packed_entries = []
-    for entry in entries:
-        entry_head = struct.pack('!LLLLLLLLLL20sH',
-                entry.ctime_s, entry.ctime_n, entry.mtime_s, entry.mtime_n,
-                entry.dev, entry.ino, entry.mode, entry.uid, entry.gid,
-                entry.size, entry.sha1, entry.flags)
-        path = entry.path.encode()
-        length = ((62 + len(path) + 8) // 8) * 8
-        packed_entry = entry_head + path + b'\x00' * (length - 62 - len(path))
-        packed_entries.append(packed_entry)
-    header = struct.pack('!4sLL', b'DIRC', 2, len(entries))
-    all_data = header + b''.join(packed_entries)
-    digest = hashlib.sha1(all_data).digest()
-    write_file(os.path.join('.closeup', 'register'), all_data + digest)
 
 def write_tree():
     """Write a tree object from the current register entries."""

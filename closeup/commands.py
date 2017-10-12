@@ -1,11 +1,13 @@
 """Implement sub commands.
 """
 
-import difflib, operator, os, stat, sys, time
-from .core import ( write_file, read_object, read_tree, read_register,
-    RegisterEntry, write_register, write_tree, get_local_master_hash,
+import difflib, operator, os, stat, sys, time, configparser
+from .core import ( write_file, read_object, read_tree,
+    RegisterEntry, write_tree, get_local_master_hash,
     get_remote_master_hash, find_missing_objects, build_lines_data,
     create_pack, http_request, extract_lines, hash_object )
+
+regpath = os.path.join('.closeup', 'register')
 
 def init(repo):
     """Create directory for repo and initialize .closeup directory."""
@@ -100,24 +102,16 @@ def diff():
 
 def register(name, directions, dir_type):
     """Add all directions to closeup register."""
-    #TODO: use configparser instead of custom binary format
+    regfile = configparser.ConfigParser()
+    regfile.read(regpath)
     if dir_type == 'path':
         directions = [d.replace('\\', '/') for d in directions]
-    all_entries = read_register()
-    entries = [e for e in all_entries if e.direction not in directions]
-    for direction in directions:
-        sha1 = hash_object(read_file(direction), 'blob')
-        st = os.stat(direction)
-        flags = len(direction.encode())
-        assert flags < (1 << 12)
-        entry = RegisterEntry(
-                int(st.st_ctime), 0, int(st.st_mtime), 0, st.st_dev,
-                st.st_ino, st.st_mode, st.st_uid, st.st_gid, st.st_size,
-                bytes.fromhex(sha1), flags, direction)
-        entries.append(entry)
-    entries.sort(key=operator.attrgetter('direction'))
-    write_register(entries)
-
+    digests =[hash_object(d.encode(), dir_type) for d in directions]
+    if not regfile.has_section(dir_type):
+        regfile.add_section(dir_type)
+    regfile.set(dir_type, name, ', '.join(digests))
+    with open(regpath, 'w') as freg:
+        regfile.write(freg)
 
 def commit(message, author=None):
     """Commit the current state of the register to master with given message.
