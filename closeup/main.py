@@ -2,7 +2,7 @@
 
 import sys, argparse
 from .commands import ( register, cat_file, commit, diff, hash_object,
-    init, ls_files, push )
+    init, ls_files, push, show )
 
 def main(argv=None):
     parser = argparse.ArgumentParser()
@@ -23,6 +23,11 @@ def main(argv=None):
     sub_parser.add_argument('-t', choices=['path', 'command', 'variable'],
             default='path', dest='type',
             help='type of object (default %(default)r)')
+
+    sub_parser = sub_parsers.add_parser('show',
+            help='show content of name')
+    sub_parser.add_argument('name',
+            help='name for objects')
 
     sub_parser = sub_parsers.add_parser('cat-file',
             help='display contents of object')
@@ -82,6 +87,8 @@ def main(argv=None):
         init(args.repo)
     elif args.command == 'register':
         register(args.name, args.directions, args.type)
+    elif args.command == 'show':
+        show(args.name)
     elif args.command == 'cat-file':
         try:
             cat_file(args.mode, args.hash_prefix)

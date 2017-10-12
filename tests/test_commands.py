@@ -1,10 +1,21 @@
 from context import closeup
-import unittest
-import os
-import shutil
+import unittest, sys, os, shutil
+
+from contextlib import contextmanager
+from io import StringIO
 
 proj = os.path.join(os.path.dirname(__file__), 'myproj')
 prog = os.path.join(os.path.dirname(__file__), 'prog/fort/app1')
+
+@contextmanager
+def captured_output():
+    new_out, new_err = StringIO(), StringIO()
+    old_out, old_err = sys.stdout, sys.stderr
+    try:
+        sys.stdout, sys.stderr = new_out, new_err
+        yield sys.stdout, sys.stderr
+    finally:
+        sys.stdout, sys.stderr = old_out, old_err
 
 class TestCommands(unittest.TestCase):
 
@@ -22,6 +33,11 @@ class TestCommands(unittest.TestCase):
     def test_register(self):
         self.test_init()
         closeup.main(argv=['register', 'app1', prog])
-        #self.assertTrue(os.path.exists(os.path.join(proj, '.closeup')))
+        closeup.main(argv=['show', 'app1'])
+        #with captured_output() as (out, err):
+        #    closeup.main(argv=['show', 'app1'])
+        #    output = out.getvalue().strip()
+        #    self.assertEqual(output, 'hello world!')
+
 if __name__ == '__main__':
     unittest.main()

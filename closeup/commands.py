@@ -18,6 +18,40 @@ def init(repo):
     write_file(os.path.join(repo, '.closeup', 'HEAD'), b'ref: refs/heads/master')
     print('initialized empty repository: {}'.format(repo))
 
+def register(name, directions, dir_type):
+    """Add all directions to closeup register."""
+    regfile = configparser.ConfigParser()
+    regfile.read(regpath)
+    if dir_type == 'path':
+        directions = [d.replace('\\', '/') for d in directions]
+    digests =[hash_object(d.encode(), dir_type) for d in directions]
+    if not regfile.has_section(dir_type):
+        regfile.add_section(dir_type)
+    regfile.set(dir_type, name, ', '.join(digests))
+    with open(regpath, 'w') as freg:
+        regfile.write(freg)
+
+def show(name):
+    """show content of objects."""
+    namepath = name.split('/')
+    TODO: need to handle closeup name function
+    poslb = namepath[0].find('[')
+    posrb = namepath[0].find(']')
+    if poslb>0 and posrb>0 and posrb>poslb and namepath[0][poslb+1:posrb].isdigit():
+    else:
+    import pdb; pdb.set_trace()
+    if match:
+        print (option, regfile.get(section, option))
+    else:
+        print (option, regfile.get(section, option))
+    #import pdb; pdb.set_trace()
+
+    regfile = configparser.ConfigParser()
+    regfile.read(regpath)
+
+    for section in regfile.sections():
+        for option in regfile.options(section):
+
 
 def cat_file(mode, sha1_prefix):
     """Write the contents of (or info about) object with given SHA-1 prefix to
@@ -99,19 +133,6 @@ def diff():
         if i < len(modified) - 1:
             print('-' * 70)
 
-
-def register(name, directions, dir_type):
-    """Add all directions to closeup register."""
-    regfile = configparser.ConfigParser()
-    regfile.read(regpath)
-    if dir_type == 'path':
-        directions = [d.replace('\\', '/') for d in directions]
-    digests =[hash_object(d.encode(), dir_type) for d in directions]
-    if not regfile.has_section(dir_type):
-        regfile.add_section(dir_type)
-    regfile.set(dir_type, name, ', '.join(digests))
-    with open(regpath, 'w') as freg:
-        regfile.write(freg)
 
 def commit(message, author=None):
     """Commit the current state of the register to master with given message.
