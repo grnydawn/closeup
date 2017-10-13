@@ -45,6 +45,7 @@ class TestCommands(unittest.TestCase):
             closeup.main(argv=['show', 'home'])
             output = out.getvalue().strip()
             self.assertTrue(output.find('HOME')>0)
+        print(output)
 
 if __name__ == '__main__':
     unittest.main()

@@ -19,14 +19,14 @@ def main(argv=None):
             help='name for objects')
     sub_parser.add_argument('directions', nargs='+', metavar='direction',
             help='direction(s) of objects to register')
-    sub_parser.add_argument('-t', choices=['filepath', 'command', 'variable'],
-            default='filepath', dest='type',
+    sub_parser.add_argument('-t', choices=['path', 'command', 'variable'],
+            default='path', dest='type',
             help='type of object (default %(default)r)')
 
     sub_parser = sub_parsers.add_parser('show',
             help='show content of name')
-    sub_parser.add_argument('name',
-            help='name for objects')
+    sub_parser.add_argument('names', nargs='+', metavar='name',
+            help='name(s) for objects')
 
     sub_parser = sub_parsers.add_parser('record',
             help='record current state of register to master branch')
@@ -85,7 +85,7 @@ def main(argv=None):
     elif args.command == 'register':
         commands.register(args.name, args.directions, args.type)
     elif args.command == 'show':
-        commands.show(args.name)
+        commands.show(args.names)
     elif args.command == 'record':
         commands.record(args.name, args.message)
     elif args.command == 'cat-file':

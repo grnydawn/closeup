@@ -13,28 +13,37 @@ def init(repo):
     core.write_file(os.path.join(repo, '.closeup', 'HEAD'), b'ref: refs/heads/master')
     print('initialized empty repository: {}'.format(repo))
 
-def register(name, directions, dir_type):
+def register(name, directions, dir_type, **kwargs):
     """Add all directions to closeup register."""
     name_list = name.split('/')
-    regdict = read_register()
-    if dir_type in regdict and name_list[0] in regdict[dir_type]:
-        raise ValueError('{} is already exists in register. '.format(name_list[0]),
-            'Use reregiser command to replace the old name.')
-    if dir_type == 'filepath':
-        directions = [d.replace('\\', '/') for d in directions]
-    digests =[core.hash_object(d.encode(), dir_type) for d in directions]
-    core.write_namepath(name_list, digests)
-    regdict[dir_type].append(name_list[0])
-    write_register(regdict)
+    reg_dict = core.read_register()
+    cur_dict = reg_dict
+    for name in name_list[:-1]:
+        if name not in cur_dict:
+            cur_dict[name] = dict()
+        cur_dict = cur_dict[name]
+    if name_list[-1] in cur_dict:
+        raise ValueError('Use "reregister" command to replace "{}".'.format(name))
+    kwargs['reg_type'] = dir_type
+    cur_dict[name_list[-1]] = (directions, kwargs)
+    core.write_register(reg_dict)
 
-def show(name):
+def show(names):
     """show content of objects."""
-    namepath = core.parse_name(name)
-    dir_type, regname, shalist = core.get_register_entry(*(namepath[0]))
-    for sha1 in shalist:
-        obj_type, data = core.read_object(shalist[0]) 
-        print('Object type is "{}".'.format(obj_type))
-        print('Content of object: {}\n\n'.format(data.decode()))
+    for name in names:
+        reg_name_list, obj_name_list = core.parse_name(name)
+        reg_data, reg_attr = core.get_register_entry(reg_name_list)
+        reg_name_str_list = [n for n,i in reg_name_list[:-1]]
+        reg_name_str_list.append(reg_name_list[-1][0] if reg_name_list[-1][1] is None \
+            else '{}[{}]'.format(*reg_name_list[-1]))
+        print('{} "{}" is registered with "{}".'.format(
+            reg_attr['reg_type'], '/'.join(reg_name_str_list), reg_data))
+        if obj_name_list:
+            if True: # if image hash is not provided
+                image_string = 'Current'
+            obj_data = 'Not implemented yet.'
+            print('{} value of "{}" is:\n{}'.format(
+                image_string, '/'.join(obj_name_list), obj_data))
 
 def commit(name, message):
     """Record the current state of the register to master with given message.

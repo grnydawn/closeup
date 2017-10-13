@@ -1,26 +1,26 @@
 """Implement core functions.
 """
 
-import enum, hashlib, os, stat
+import enum, hashlib, os, stat, json
 import struct, urllib.request, zlib, configparser
 
 regpath = os.path.join('.closeup', 'register')
 
-class ObjectType(enum.Enum):
-    """Object type enum."""
-    filepath    = enum.auto()
-    command     = enum.auto()
-    variable    = enum.auto()
-    namepath    = enum.auto()
-    file        = enum.auto()
-    directory   = enum.auto()
-    blob        = enum.auto()
-    string      = enum.auto()
-    integer     = enum.auto() 
-    float       = enum.auto() 
-    boolean     = enum.auto() 
-    datetime    = enum.auto() 
-    null        = enum.auto()
+#class ObjectType(enum.Enum):
+#    """Object type enum."""
+#    path    = enum.auto()
+#    command     = enum.auto()
+#    variable    = enum.auto()
+#    namepath    = enum.auto()
+#    file        = enum.auto()
+#    directory   = enum.auto()
+#    blob        = enum.auto()
+#    string      = enum.auto()
+#    integer     = enum.auto() 
+#    float       = enum.auto() 
+#    boolean     = enum.auto() 
+#    datetime    = enum.auto() 
+#    null        = enum.auto()
 
 def parse_name(name):
     """Split and parse name into namepath."""
@@ -33,7 +33,19 @@ def parse_name(name):
             parsed.append((item, None))
         else:
             parsed.append((item[:poslb], int(item[poslb+1:posrb])))
-    return parsed
+    reg_name_list = []
+    obj_name_list = list(parsed)
+
+    cur_dict = read_register()
+    for item_name, index in parsed:
+        if item_name not in cur_dict:
+            return reg_name_list, obj_name_list
+        if index is None:
+            cur_dict = cur_dict[item_name]
+        else:
+            cur_dict = cur_dict[item_name][index]
+        reg_name_list.append(obj_name_list.pop(0))
+    return reg_name_list, obj_name_list
 
 def save_object(data, obj_type, write=True):
     pass
@@ -41,54 +53,26 @@ def save_object(data, obj_type, write=True):
 def read_register():
     if os.path.exists(regpath):
         with open(regpath, 'r') as freg:
-            for line in freg.read().splitlines():
-                obj_type, names = line.split(':', 1)
-                for name in names.split('/'):
-                    yield (obj_type, name)
+            return json.load(freg)
     else:
-        return tuple([])
+        return {}
 
-def write_register(obj_dict):
-    with open(regpath, 'w') freg:
-        for obj_type, names in obj_dict.items():
-            freg.write('{}:{}\n'.format(obj_dict, '/'.join(names)))
+def write_register(reg_dict):
+    with open(regpath, 'w') as freg:
+        json.dump(reg_dict, freg)
 
-def write_namepath(name_list, digests):
-    """Write trees from the current register entries."""
-    parent_sha = None
-    parent_data = None
-    for idx in range(len(name_list)):
-        path_str = '/'.join(name_list[:idx+1])
-        path_sha = hashlib.sha1(path_str).hexdigest()
-        try:
-            data = read_object(path_sha)
-            # data: path:hash,hash,...
-        except FileNotFoundError as e:
-            data = '{}:{}'.format(path_str.encode(), ','.join())
-            hash_object(data, 'namepath', write=True, sha1=path_sha):
-
-
-    for name in reversed(namepath[:-1]):
-
-#    image_entries = []
-#    for entry in read_register():
-#        assert '/' not in entry.path, \
-#                'currently only supports a single, top-level directory'
-#        mode_path = '{:o} {}'.format(entry.mode, entry.path).encode()
-#        image_entry = mode_path + b'\x00' + entry.sha1
-#        image_entries.append(image_entry)
-#    return hash_object(b''.join(image_entries), 'image')
-
-def get_register_entry(name, index=None):
+def get_register_entry(reg_name_list):
     """Return an item in register."""
-    for dir_type, namepath, value in read_register():
-        if namepath == name:
-            value = value.split(',')
-            if isinstance(index, int):
-                return (dir_type, namepath, list(value[index]))
-            else:
-                return (dir_type, namepath, value)
-    return (None, None, None)
+    cur_container = read_register()
+    for item_name, index in reg_name_list:
+        cur_container = cur_container[item_name] # only leaf node can have a list
+    if isinstance(cur_container, dict):
+        return list(cur_container), {'reg_type': 'name'}
+    elif isinstance(cur_container, list):
+        if index is None:
+            index = 0
+        return cur_container[0][index], cur_container[1]
+    return '', {}
 
 def read_file(path):
     """Read contents of file at given path as bytes."""
