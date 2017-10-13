@@ -1,7 +1,8 @@
 """Implement sub commands.
 """
 
-import difflib, os, stat, sys, time
+from __future__ import absolute_import, division, print_function, unicode_literals
+import difflib, os, stat, sys, time, getpass, logging
 from . import core
 
 def init(repo):
@@ -25,35 +26,51 @@ def register(name, directions, dir_type, **kwargs):
     if name_list[-1] in cur_dict:
         raise ValueError('Use "reregister" command to replace "{}".'.format(name))
     kwargs['reg_type'] = dir_type
-    cur_dict[name_list[-1]] = (directions, kwargs)
+    cur_dict[name_list[-1]] = list((d,kwargs) for d in directions)
     core.write_register(reg_dict)
 
 def show(names):
     """show content of objects."""
+    logging.debug('calling show({})'.format(names))
+    def print_leaf(e, n):
+        print('{} "{}" is registered with "{}".'.format(e[1]['reg_type'], n, e[0]))
     for name in names:
         reg_name_list, obj_name_list = core.parse_name(name)
-        reg_data, reg_attr = core.get_register_entry(reg_name_list)
-        reg_name_str_list = [n for n,i in reg_name_list[:-1]]
-        reg_name_str_list.append(reg_name_list[-1][0] if reg_name_list[-1][1] is None \
-            else '{}[{}]'.format(*reg_name_list[-1]))
-        print('{} "{}" is registered with "{}".'.format(
-            reg_attr['reg_type'], '/'.join(reg_name_str_list), reg_data))
-        if obj_name_list:
-            if True: # if image hash is not provided
-                image_string = 'Current'
-            obj_data = 'Not implemented yet.'
-            print('{} value of "{}" is:\n{}'.format(
-                image_string, '/'.join(obj_name_list), obj_data))
+        if reg_name_list:
+            reg_name_str_list = [n for n,i in reg_name_list[:-1]]
+            reg_name_str_list.append(reg_name_list[-1][0] if reg_name_list[-1][1] is None \
+                else '{}[{}]'.format(*reg_name_list[-1]))
+            reg_name_str = '/'.join(reg_name_str_list)
+            entry = core.get_register_entry(reg_name_list)
+            if isinstance(entry, dict):
+                print('name "{}" contains "{}".'.format(
+                    reg_name_str, ', '.join(entry.keys())))
+            elif isinstance(entry, list):
+                if core.is_leaf(entry):
+                    print_leaf(entry, reg_name_str)
+                elif core.are_leaves(entry):
+                    for e in entry:
+                        print_leaf(e, reg_name_str)
+                else:
+                    print('name "{}" contains "{}".'.format(reg_name_str, entry))
+            else:
+                    print('Unknown name "{}" contains "{}".'.format(reg_name_str, entry))
+            if obj_name_list:
+                if True: # if image hash is not provided
+                    image_string = 'Current'
+                obj_data = 'Not implemented yet.'
+                print('{} value of "{}" is:\n{}'.format(
+                    image_string, '/'.join(obj_name_list), obj_data))
+        else:
+            print('name "{}" is not found.'.format(name))
 
-def commit(name, message):
+def record(name, message):
     """Record the current state of the register to master with given message.
-    Return hash of commit object.
+    Return hash of record object.
     """
     image = core.write_image()
     parent = core.get_local_master_hash()
-    if author is None:
-        author = '{} <{}>'.format(
-                os.environ['GIT_AUTHOR_NAME'], os.environ['GIT_AUTHOR_EMAIL'])
+    author = getpass.getuser()
     timestamp = int(time.mktime(time.localtime()))
     utc_offset = -time.timezone
     author_time = '{} {}{:02}{:02}'.format(
@@ -65,15 +82,15 @@ def commit(name, message):
     if parent:
         lines.append('parent ' + parent)
     lines.append('author {} {}'.format(author, author_time))
-    lines.append('committer {} {}'.format(author, author_time))
+    lines.append('recorder {} {}'.format(author, author_time))
     lines.append('')
     lines.append(message)
     lines.append('')
     data = '\n'.join(lines).encode()
-    sha1 = core.hash_object(data, 'commit')
+    sha1 = core.hash_object(data, 'record')
     master_path = os.path.join('.closeup', 'refs', 'heads', 'master')
     core.write_file(master_path, (sha1 + '\n').encode())
-    print('committed to master: {:7}'.format(sha1))
+    print('recorded to master: {:7}'.format(sha1))
     return sha1
 
 

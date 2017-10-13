@@ -1,7 +1,7 @@
 """Implement core functions.
 """
-
-import enum, hashlib, os, stat, json
+from __future__ import absolute_import, division, print_function, unicode_literals
+import enum, hashlib, os, stat, json, logging, subprocess
 import struct, urllib.request, zlib, configparser
 
 regpath = os.path.join('.closeup', 'register')
@@ -21,6 +21,16 @@ regpath = os.path.join('.closeup', 'register')
 #    boolean     = enum.auto() 
 #    datetime    = enum.auto() 
 #    null        = enum.auto()
+
+def read_file(path):
+    """Read contents of file at given path as bytes."""
+    with open(path, 'rb') as f:
+        return f.read()
+
+def write_file(path, data):
+    """Write data bytes to file at given path."""
+    with open(path, 'wb') as f:
+        f.write(data)
 
 def parse_name(name):
     """Split and parse name into namepath."""
@@ -47,8 +57,20 @@ def parse_name(name):
         reg_name_list.append(obj_name_list.pop(0))
     return reg_name_list, obj_name_list
 
-def save_object(data, obj_type, write=True):
-    pass
+def is_leaf(e):
+    return isinstance(e, list) and len(e)==2 and isinstance(e[0],str) and \
+        isinstance(e[1],dict) and 'reg_type' in e[1]
+
+def are_leaves(e):
+    return isinstance(e, list) and all(is_leaf(_e) for _e in e)
+
+def get_leaves(e):
+    for k, v in e.items():
+        if are_leaves(v):
+            for _v in v:
+                yield _v
+        else:
+            return get_leaves(v) 
 
 def read_register():
     if os.path.exists(regpath):
@@ -63,37 +85,23 @@ def write_register(reg_dict):
 
 def get_register_entry(reg_name_list):
     """Return an item in register."""
+    logging.debug('calling get_register_entry({})'.format(reg_name_list))
     cur_container = read_register()
     for item_name, index in reg_name_list:
-        cur_container = cur_container[item_name] # only leaf node can have a list
-    if isinstance(cur_container, dict):
-        return list(cur_container), {'reg_type': 'name'}
-    elif isinstance(cur_container, list):
-        if index is None:
-            index = 0
-        return cur_container[0][index], cur_container[1]
-    return '', {}
+        if isinstance(index, int):
+            cur_container = cur_container[item_name][index]
+        else:
+            cur_container = cur_container[item_name]
+    logging.debug('returning get_register_entry with {}'.format(cur_container))
+    return cur_container
 
-def read_file(path):
-    """Read contents of file at given path as bytes."""
-    with open(path, 'rb') as f:
-        return f.read()
-
-
-def write_file(path, data):
-    """Write data bytes to file at given path."""
-    with open(path, 'wb') as f:
-        f.write(data)
-
-
-def hash_object(data, obj_type, write=True, sha1=None):
+def hash_object(data, obj_type, write=True):
     """Compute hash of object data of given type and write to object store if
     "write" is True. Return SHA-1 object hash as hex string.
     """
     header = '{} {}'.format(obj_type, len(data)).encode()
     full_data = header + b'\x00' + data
-    if sha1 is None:
-        sha1 = hashlib.sha1(full_data).hexdigest()
+    sha1 = hashlib.sha1(full_data).hexdigest()
     if write:
         path = os.path.join('.closeup', 'objects', sha1[:2], sha1[2:])
         if not os.path.exists(path):
@@ -101,6 +109,29 @@ def hash_object(data, obj_type, write=True, sha1=None):
             write_file(path, zlib.compress(full_data))
     return sha1
 
+def hash_command(command):
+    stdout = subprocess.check_output(os.path.expandvars(command).split())
+    return hash_object(stdout, 'command')
+
+def hash_file(path):
+    return hash_object(b'', 'path')
+
+def hash_variable(var):
+    return hash_object(os.path.expandvars('$'+var).encode(), 'variable')
+
+def write_image():
+    reg_dict = read_register()
+    for item, attr in get_leaves(reg_dict):
+        reg_type = attr['reg_type']
+        if reg_type == 'path':
+            sha1 = hash_file(item)
+        elif reg_type == 'command':
+            sha1 = hash_command(item)
+        elif reg_type == 'variable':
+            sha1 = hash_variable(item)
+        attr['sha'] = sha1
+    write_register(reg_dict)
+    return hashlib.sha1(json.dumps(reg_dict, separators=(',',':')).encode()).hexdigest()
 
 def find_object(sha1_prefix):
     """Find object with given SHA-1 prefix and return path to object in object

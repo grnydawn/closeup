@@ -1,5 +1,6 @@
 """Implement closeup command-line interface"""
 
+from __future__ import absolute_import, division, print_function, unicode_literals
 import sys, argparse
 from . import commands
 
@@ -32,7 +33,7 @@ def main(argv=None):
             help='record current state of register to master branch')
     sub_parser.add_argument('name',
             help='name for image')
-    sub_parser.add_argument('-m', '--message',
+    sub_parser.add_argument('-m', '--message', default='Not specified.',
             help='text of commit message')
 
     sub_parser = sub_parsers.add_parser('cat-file',

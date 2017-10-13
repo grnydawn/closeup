@@ -19,19 +19,19 @@ def captured_output():
 
 class TestCommands(unittest.TestCase):
 
-    def test_clear(self):
+    def _test_clear(self):
         shutil.rmtree(proj, ignore_errors=True)
         self.assertFalse(os.path.exists(proj))
 
-    def test_init(self):
-        self.test_clear()
+    def _test_init(self):
+        self._test_clear()
         os.chdir(os.path.expanduser('~'))
         closeup.main(argv=['init', proj])
         os.chdir(proj)
         self.assertTrue(os.path.exists(os.path.join(proj, '.closeup')))
 
-    def test_register(self):
-        self.test_init()
+    def _test_register(self):
+        self._test_init()
         closeup.main(argv=['register', 'app1', prog])
         closeup.main(argv=['register', 'cpuinfo', 'cat /proc/cpuinfo', '-t', 'command'])
         closeup.main(argv=['register', 'home', 'HOME', '-t', 'variable'])
@@ -45,6 +45,15 @@ class TestCommands(unittest.TestCase):
             closeup.main(argv=['show', 'home'])
             output = out.getvalue().strip()
             self.assertTrue(output.find('HOME')>0)
+        print(output)
+
+    def test_record(self):
+        self._test_register()
+        closeup.main(argv=['record', 'rec1'])
+        with captured_output() as (out, err):
+            closeup.main(argv=['show', 'rec1'])
+            output = out.getvalue().strip()
+            #self.assertTrue(output.find(prog)>0)
         print(output)
 
 if __name__ == '__main__':
