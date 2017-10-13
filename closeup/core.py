@@ -1,24 +1,94 @@
 """Implement core functions.
 """
 
-import collections, enum, hashlib, os, stat
-import struct, urllib.request, zlib
+import enum, hashlib, os, stat
+import struct, urllib.request, zlib, configparser
 
-# Data for one entry in the closeup register (.closeup/register)
-RegisterEntry = collections.namedtuple('RegisterEntry', [
-    'ctime_s', 'ctime_n', 'mtime_s', 'mtime_n', 'dev', 'ino', 'mode', 'uid',
-    'gid', 'size', 'sha1', 'flags', 'path',
-])
-
+regpath = os.path.join('.closeup', 'register')
 
 class ObjectType(enum.Enum):
-    """Object type enum. There are other types too, but we don't need them.
-    See "enum object_type" in closeup's source (closeup/cache.h).
-    """
-    path = 1
-    command = 2
-    variable = 3
+    """Object type enum."""
+    filepath    = enum.auto()
+    command     = enum.auto()
+    variable    = enum.auto()
+    namepath    = enum.auto()
+    file        = enum.auto()
+    directory   = enum.auto()
+    blob        = enum.auto()
+    string      = enum.auto()
+    integer     = enum.auto() 
+    float       = enum.auto() 
+    boolean     = enum.auto() 
+    datetime    = enum.auto() 
+    null        = enum.auto()
 
+def parse_name(name):
+    """Split and parse name into namepath."""
+    parsed = []
+    for item in name.split('/'):
+        poslb = item.find('[')
+        posrb = item.find(']')
+        if poslb<=0 or posrb<=0 or posrb<=poslb or \
+            (posrb+1)!=len(item) or not item[poslb+1:posrb].isdigit():
+            parsed.append((item, None))
+        else:
+            parsed.append((item[:poslb], int(item[poslb+1:posrb])))
+    return parsed
+
+def save_object(data, obj_type, write=True):
+    pass
+
+def read_register():
+    if os.path.exists(regpath):
+        with open(regpath, 'r') as freg:
+            for line in freg.read().splitlines():
+                obj_type, names = line.split(':', 1)
+                for name in names.split('/'):
+                    yield (obj_type, name)
+    else:
+        return tuple([])
+
+def write_register(obj_dict):
+    with open(regpath, 'w') freg:
+        for obj_type, names in obj_dict.items():
+            freg.write('{}:{}\n'.format(obj_dict, '/'.join(names)))
+
+def write_namepath(name_list, digests):
+    """Write trees from the current register entries."""
+    parent_sha = None
+    parent_data = None
+    for idx in range(len(name_list)):
+        path_str = '/'.join(name_list[:idx+1])
+        path_sha = hashlib.sha1(path_str).hexdigest()
+        try:
+            data = read_object(path_sha)
+            # data: path:hash,hash,...
+        except FileNotFoundError as e:
+            data = '{}:{}'.format(path_str.encode(), ','.join())
+            hash_object(data, 'namepath', write=True, sha1=path_sha):
+
+
+    for name in reversed(namepath[:-1]):
+
+#    image_entries = []
+#    for entry in read_register():
+#        assert '/' not in entry.path, \
+#                'currently only supports a single, top-level directory'
+#        mode_path = '{:o} {}'.format(entry.mode, entry.path).encode()
+#        image_entry = mode_path + b'\x00' + entry.sha1
+#        image_entries.append(image_entry)
+#    return hash_object(b''.join(image_entries), 'image')
+
+def get_register_entry(name, index=None):
+    """Return an item in register."""
+    for dir_type, namepath, value in read_register():
+        if namepath == name:
+            value = value.split(',')
+            if isinstance(index, int):
+                return (dir_type, namepath, list(value[index]))
+            else:
+                return (dir_type, namepath, value)
+    return (None, None, None)
 
 def read_file(path):
     """Read contents of file at given path as bytes."""
@@ -32,13 +102,14 @@ def write_file(path, data):
         f.write(data)
 
 
-def hash_object(data, obj_type, write=True):
+def hash_object(data, obj_type, write=True, sha1=None):
     """Compute hash of object data of given type and write to object store if
     "write" is True. Return SHA-1 object hash as hex string.
     """
     header = '{} {}'.format(obj_type, len(data)).encode()
     full_data = header + b'\x00' + data
-    sha1 = hashlib.sha1(full_data).hexdigest()
+    if sha1 is None:
+        sha1 = hashlib.sha1(full_data).hexdigest()
     if write:
         path = os.path.join('.closeup', 'objects', sha1[:2], sha1[2:])
         if not os.path.exists(path):
@@ -111,17 +182,6 @@ def read_object(sha1_prefix):
 #    deleted = entry_paths - paths
 #    return (sorted(modified), sorted(untracted), sorted(deleted))
 
-def write_tree():
-    """Write a tree object from the current register entries."""
-    tree_entries = []
-    for entry in read_register():
-        assert '/' not in entry.path, \
-                'currently only supports a single, top-level directory'
-        mode_path = '{:o} {}'.format(entry.mode, entry.path).encode()
-        tree_entry = mode_path + b'\x00' + entry.sha1
-        tree_entries.append(tree_entry)
-    return hash_object(b''.join(tree_entries), 'tree')
-
 
 def get_local_master_hash():
     """Get current commit hash (SHA-1 string) of local master branch."""
@@ -188,13 +248,13 @@ def get_remote_master_hash(closeup_url, username, password):
     return master_sha1.decode()
 
 
-def read_tree(sha1=None, data=None):
-    """Read tree object with given SHA-1 (hex string) or data, and return list
+def read_image(sha1=None, data=None):
+    """Read image object with given SHA-1 (hex string) or data, and return list
     of (mode, path, sha1) tuples.
     """
     if sha1 is not None:
         obj_type, data = read_object(sha1)
-        assert obj_type == 'tree'
+        assert obj_type == 'image'
     elif data is None:
         raise TypeError('must specify "sha1" or "data"')
     i = 0
@@ -211,14 +271,14 @@ def read_tree(sha1=None, data=None):
     return entries
 
 
-def find_tree_objects(tree_sha1):
-    """Return set of SHA-1 hashes of all objects in this tree (recursively),
-    including the hash of the tree itself.
+def find_image_objects(image_sha1):
+    """Return set of SHA-1 hashes of all objects in this image (recursively),
+    including the hash of the image itself.
     """
-    objects = {tree_sha1}
-    for mode, path, sha1 in read_tree(sha1=tree_sha1):
+    objects = {image_sha1}
+    for mode, path, sha1 in read_image(sha1=image_sha1):
         if stat.S_ISDIR(mode):
-            objects.update(find_tree_objects(sha1))
+            objects.update(find_image_objects(sha1))
         else:
             objects.add(sha1)
     return objects

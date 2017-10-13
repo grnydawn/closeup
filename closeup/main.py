@@ -1,8 +1,7 @@
 """Implement closeup command-line interface"""
 
 import sys, argparse
-from .commands import ( register, cat_file, commit, diff, hash_object,
-    init, ls_files, push, show )
+from . import commands
 
 def main(argv=None):
     parser = argparse.ArgumentParser()
@@ -20,14 +19,21 @@ def main(argv=None):
             help='name for objects')
     sub_parser.add_argument('directions', nargs='+', metavar='direction',
             help='direction(s) of objects to register')
-    sub_parser.add_argument('-t', choices=['path', 'command', 'variable'],
-            default='path', dest='type',
+    sub_parser.add_argument('-t', choices=['filepath', 'command', 'variable'],
+            default='filepath', dest='type',
             help='type of object (default %(default)r)')
 
     sub_parser = sub_parsers.add_parser('show',
             help='show content of name')
     sub_parser.add_argument('name',
             help='name for objects')
+
+    sub_parser = sub_parsers.add_parser('record',
+            help='record current state of register to master branch')
+    sub_parser.add_argument('name',
+            help='name for image')
+    sub_parser.add_argument('-m', '--message',
+            help='text of commit message')
 
     sub_parser = sub_parsers.add_parser('cat-file',
             help='display contents of object')
@@ -37,15 +43,6 @@ def main(argv=None):
                  'type, pretty)')
     sub_parser.add_argument('hash_prefix',
             help='SHA-1 hash (or hash prefix) of object to display')
-
-    sub_parser = sub_parsers.add_parser('commit',
-            help='commit current state of register to master branch')
-    sub_parser.add_argument('-a', '--author',
-            help='commit author in format "A U Thor <author@example.com>" '
-                 '(uses GIT_AUTHOR_NAME and GIT_AUTHOR_EMAIL environment '
-                 'variables by default)')
-    sub_parser.add_argument('-m', '--message', required=True,
-            help='text of commit message')
 
     sub_parser = sub_parsers.add_parser('diff',
             help='show diff of images changed')
@@ -84,28 +81,28 @@ def main(argv=None):
     args = parser.parse_args(args=argv)
 
     if args.command == 'init':
-        init(args.repo)
+        commands.init(args.repo)
     elif args.command == 'register':
-        register(args.name, args.directions, args.type)
+        commands.register(args.name, args.directions, args.type)
     elif args.command == 'show':
-        show(args.name)
+        commands.show(args.name)
+    elif args.command == 'record':
+        commands.record(args.name, args.message)
     elif args.command == 'cat-file':
         try:
-            cat_file(args.mode, args.hash_prefix)
+            commands.cat_file(args.mode, args.hash_prefix)
         except ValueError as error:
             print(error, file=sys.stderr)
             sys.exit(1)
-    elif args.command == 'commit':
-        commit(args.message, author=args.author)
     elif args.command == 'diff':
-        diff()
+        commands.diff()
     elif args.command == 'hash-object':
-        sha1 = hash_object(read_file(args.path), args.type, write=args.write)
+        sha1 = commands.hash_object(read_file(args.path), args.type, write=args.write)
         print(sha1)
     elif args.command == 'ls-files':
-        ls_files(details=args.stage)
+        commands.ls_files(details=args.stage)
     elif args.command == 'push':
-        push(args.closeup_url, username=args.username, password=args.password)
+        commands.push(args.closeup_url, username=args.username, password=args.password)
 #    elif args.command == 'status':
 #        status()
     else:

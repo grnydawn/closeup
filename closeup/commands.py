@@ -1,13 +1,8 @@
 """Implement sub commands.
 """
 
-import difflib, operator, os, stat, sys, time, configparser
-from .core import ( write_file, read_object, read_tree,
-    RegisterEntry, write_tree, get_local_master_hash,
-    get_remote_master_hash, find_missing_objects, build_lines_data,
-    create_pack, http_request, extract_lines, hash_object )
-
-regpath = os.path.join('.closeup', 'register')
+import difflib, os, stat, sys, time
+from . import core
 
 def init(repo):
     """Create directory for repo and initialize .closeup directory."""
@@ -15,42 +10,62 @@ def init(repo):
     os.mkdir(os.path.join(repo, '.closeup'))
     for name in ['objects', 'refs', 'refs/heads']:
         os.mkdir(os.path.join(repo, '.closeup', name))
-    write_file(os.path.join(repo, '.closeup', 'HEAD'), b'ref: refs/heads/master')
+    core.write_file(os.path.join(repo, '.closeup', 'HEAD'), b'ref: refs/heads/master')
     print('initialized empty repository: {}'.format(repo))
 
 def register(name, directions, dir_type):
     """Add all directions to closeup register."""
-    regfile = configparser.ConfigParser()
-    regfile.read(regpath)
-    if dir_type == 'path':
+    name_list = name.split('/')
+    regdict = read_register()
+    if dir_type in regdict and name_list[0] in regdict[dir_type]:
+        raise ValueError('{} is already exists in register. '.format(name_list[0]),
+            'Use reregiser command to replace the old name.')
+    if dir_type == 'filepath':
         directions = [d.replace('\\', '/') for d in directions]
-    digests =[hash_object(d.encode(), dir_type) for d in directions]
-    if not regfile.has_section(dir_type):
-        regfile.add_section(dir_type)
-    regfile.set(dir_type, name, ', '.join(digests))
-    with open(regpath, 'w') as freg:
-        regfile.write(freg)
+    digests =[core.hash_object(d.encode(), dir_type) for d in directions]
+    core.write_namepath(name_list, digests)
+    regdict[dir_type].append(name_list[0])
+    write_register(regdict)
 
 def show(name):
     """show content of objects."""
-    namepath = name.split('/')
-    TODO: need to handle closeup name function
-    poslb = namepath[0].find('[')
-    posrb = namepath[0].find(']')
-    if poslb>0 and posrb>0 and posrb>poslb and namepath[0][poslb+1:posrb].isdigit():
-    else:
-    import pdb; pdb.set_trace()
-    if match:
-        print (option, regfile.get(section, option))
-    else:
-        print (option, regfile.get(section, option))
-    #import pdb; pdb.set_trace()
+    namepath = core.parse_name(name)
+    dir_type, regname, shalist = core.get_register_entry(*(namepath[0]))
+    for sha1 in shalist:
+        obj_type, data = core.read_object(shalist[0]) 
+        print('Object type is "{}".'.format(obj_type))
+        print('Content of object: {}\n\n'.format(data.decode()))
 
-    regfile = configparser.ConfigParser()
-    regfile.read(regpath)
-
-    for section in regfile.sections():
-        for option in regfile.options(section):
+def commit(name, message):
+    """Record the current state of the register to master with given message.
+    Return hash of commit object.
+    """
+    image = core.write_image()
+    parent = core.get_local_master_hash()
+    if author is None:
+        author = '{} <{}>'.format(
+                os.environ['GIT_AUTHOR_NAME'], os.environ['GIT_AUTHOR_EMAIL'])
+    timestamp = int(time.mktime(time.localtime()))
+    utc_offset = -time.timezone
+    author_time = '{} {}{:02}{:02}'.format(
+            timestamp,
+            '+' if utc_offset > 0 else '-',
+            abs(utc_offset) // 3600,
+            (abs(utc_offset) // 60) % 60)
+    lines = ['image ' + image]
+    if parent:
+        lines.append('parent ' + parent)
+    lines.append('author {} {}'.format(author, author_time))
+    lines.append('committer {} {}'.format(author, author_time))
+    lines.append('')
+    lines.append(message)
+    lines.append('')
+    data = '\n'.join(lines).encode()
+    sha1 = core.hash_object(data, 'commit')
+    master_path = os.path.join('.closeup', 'refs', 'heads', 'master')
+    core.write_file(master_path, (sha1 + '\n').encode())
+    print('committed to master: {:7}'.format(sha1))
+    return sha1
 
 
 def cat_file(mode, sha1_prefix):
@@ -60,7 +75,7 @@ def cat_file(mode, sha1_prefix):
     'type', print the type of the object. If mode is 'pretty', print a
     prettified version of the object.
     """
-    obj_type, data = read_object(sha1_prefix)
+    obj_type, data = core.read_object(sha1_prefix)
     if mode in ['commit', 'tree', 'blob']:
         if obj_type != mode:
             raise ValueError('expected object type {}, got {}'.format(
@@ -74,7 +89,7 @@ def cat_file(mode, sha1_prefix):
         if obj_type in ['commit', 'blob']:
             sys.stdout.buffer.write(data)
         elif obj_type == 'tree':
-            for mode, path, sha1 in read_tree(data=data):
+            for mode, path, sha1 in core.read_tree(data=data):
                 type_str = 'tree' if stat.S_ISDIR(mode) else 'blob'
                 print('{:06o} {} {}\t{}'.format(mode, type_str, sha1, path))
         else:
@@ -119,7 +134,7 @@ def diff():
     entries_by_path = {e.path: e for e in read_register()}
     for i, path in enumerate(modified):
         sha1 = entries_by_path[path].sha1.hex()
-        obj_type, data = read_object(sha1)
+        obj_type, data = core.read_object(sha1)
         assert obj_type == 'blob'
         register_lines = data.decode().splitlines()
         image_lines = read_file(path).decode().splitlines()
@@ -134,56 +149,24 @@ def diff():
             print('-' * 70)
 
 
-def commit(message, author=None):
-    """Commit the current state of the register to master with given message.
-    Return hash of commit object.
-    """
-    tree = write_tree()
-    parent = get_local_master_hash()
-    if author is None:
-        author = '{} <{}>'.format(
-                os.environ['GIT_AUTHOR_NAME'], os.environ['GIT_AUTHOR_EMAIL'])
-    timestamp = int(time.mktime(time.localtime()))
-    utc_offset = -time.timezone
-    author_time = '{} {}{:02}{:02}'.format(
-            timestamp,
-            '+' if utc_offset > 0 else '-',
-            abs(utc_offset) // 3600,
-            (abs(utc_offset) // 60) % 60)
-    lines = ['tree ' + tree]
-    if parent:
-        lines.append('parent ' + parent)
-    lines.append('author {} {}'.format(author, author_time))
-    lines.append('committer {} {}'.format(author, author_time))
-    lines.append('')
-    lines.append(message)
-    lines.append('')
-    data = '\n'.join(lines).encode()
-    sha1 = hash_object(data, 'commit')
-    master_path = os.path.join('.closeup', 'refs', 'heads', 'master')
-    write_file(master_path, (sha1 + '\n').encode())
-    print('committed to master: {:7}'.format(sha1))
-    return sha1
-
-
 def push(closeup_url, username=None, password=None):
     """Push master branch to given closeup repo URL."""
     if username is None:
         username = os.environ['GIT_USERNAME']
     if password is None:
         password = os.environ['GIT_PASSWORD']
-    remote_sha1 = get_remote_master_hash(closeup_url, username, password)
-    local_sha1 = get_local_master_hash()
-    missing = find_missing_objects(local_sha1, remote_sha1)
+    remote_sha1 = core.get_remote_master_hash(closeup_url, username, password)
+    local_sha1 = core.get_local_master_hash()
+    missing = core.find_missing_objects(local_sha1, remote_sha1)
     print('updating remote master from {} to {} ({} object{})'.format(
             remote_sha1 or 'no commits', local_sha1, len(missing),
             '' if len(missing) == 1 else 's'))
     lines = ['{} {} refs/heads/master\x00 report-status'.format(
             remote_sha1 or ('0' * 40), local_sha1).encode()]
-    data = build_lines_data(lines) + create_pack(missing)
+    data = core.build_lines_data(lines) + core.create_pack(missing)
     url = closeup_url + '/closeup-receive-pack'
-    response = http_request(url, username, password, data=data)
-    lines = extract_lines(response)
+    response = core.http_request(url, username, password, data=data)
+    lines = core.extract_lines(response)
     assert len(lines) >= 2, \
         'expected at least 2 lines, got {}'.format(len(lines))
     assert lines[0] == b'unpack ok\n', \

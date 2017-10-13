@@ -33,11 +33,18 @@ class TestCommands(unittest.TestCase):
     def test_register(self):
         self.test_init()
         closeup.main(argv=['register', 'app1', prog])
-        closeup.main(argv=['show', 'app1'])
-        #with captured_output() as (out, err):
-        #    closeup.main(argv=['show', 'app1'])
-        #    output = out.getvalue().strip()
-        #    self.assertEqual(output, 'hello world!')
+        closeup.main(argv=['register', 'cpuinfo', 'cat /proc/cpuinfo', '-t', 'command'])
+        closeup.main(argv=['register', 'home', 'HOME', '-t', 'variable'])
+        with captured_output() as (out, err):
+            closeup.main(argv=['show', 'app1'])
+            output = out.getvalue().strip()
+            self.assertTrue(output.find(prog)>0)
+            closeup.main(argv=['show', 'cpuinfo'])
+            output = out.getvalue().strip()
+            self.assertTrue(output.find('cpuinfo')>0)
+            closeup.main(argv=['show', 'home'])
+            output = out.getvalue().strip()
+            self.assertTrue(output.find('HOME')>0)
 
 if __name__ == '__main__':
     unittest.main()
