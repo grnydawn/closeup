@@ -9,24 +9,25 @@ def init(repo):
     """Create directory for repo and initialize .closeup directory."""
     os.mkdir(repo)
     os.mkdir(os.path.join(repo, '.closeup'))
-    for name in ['objects', 'refs', 'refs/heads']:
+    for name in ['objects', 'refs', 'refs/heads', 'refs/records']:
         os.mkdir(os.path.join(repo, '.closeup', name))
     core.write_file(os.path.join(repo, '.closeup', 'HEAD'), b'ref: refs/heads/master')
     print('initialized empty repository: {}'.format(repo))
 
 def register(name, directions, dir_type, **kwargs):
     """Add all directions to closeup register."""
-    name_list = name.split('/')
+#    name_list = name.split('/')
     reg_dict = core.read_register()
-    cur_dict = reg_dict
-    for name in name_list[:-1]:
-        if name not in cur_dict:
-            cur_dict[name] = dict()
-        cur_dict = cur_dict[name]
-    if name_list[-1] in cur_dict:
-        raise ValueError('Use "reregister" command to replace "{}".'.format(name))
     kwargs['reg_type'] = dir_type
-    cur_dict[name_list[-1]] = list((d,kwargs) for d in directions)
+    core.set_dictnode(reg_dict, name, list((d,kwargs) for d in directions))
+#    cur_dict = reg_dict
+#    for name in name_list[:-1]:
+#        if name not in cur_dict:
+#            cur_dict[name] = dict()
+#        cur_dict = cur_dict[name]
+#    if name_list[-1] in cur_dict:
+#        raise ValueError('Use "reregister" command to replace "{}".'.format(name))
+#    cur_dict[name_list[-1]] = list((d,kwargs) for d in directions)
     core.write_register(reg_dict)
 
 def show(names):
@@ -90,7 +91,7 @@ def record(name, message):
     sha1 = core.hash_object(data, 'record')
     master_path = os.path.join('.closeup', 'refs', 'heads', 'master')
     core.write_file(master_path, (sha1 + '\n').encode())
-    print('recorded to master: {:7}'.format(sha1))
+    print('recorded to master: {}({:7})'.format(name, sha1))
     return sha1
 
 

@@ -32,8 +32,7 @@ def write_file(path, data):
     with open(path, 'wb') as f:
         f.write(data)
 
-def parse_name(name):
-    """Split and parse name into namepath."""
+def split_name(name):
     parsed = []
     for item in name.split('/'):
         poslb = item.find('[')
@@ -43,11 +42,14 @@ def parse_name(name):
             parsed.append((item, None))
         else:
             parsed.append((item[:poslb], int(item[poslb+1:posrb])))
-    reg_name_list = []
-    obj_name_list = list(parsed)
+    return parsed
 
+def parse_name(name):
+    """Split and parse name into namepath."""
+    reg_name_list = []
+    obj_name_list = split_name(name)
     cur_dict = read_register()
-    for item_name, index in parsed:
+    for item_name, index in list(obj_name_list):
         if item_name not in cur_dict:
             return reg_name_list, obj_name_list
         if index is None:
@@ -56,6 +58,33 @@ def parse_name(name):
             cur_dict = cur_dict[item_name][index]
         reg_name_list.append(obj_name_list.pop(0))
     return reg_name_list, obj_name_list
+    
+def set_dictnode(top_node, name, value, create=True):
+    splited = split_name(name)
+    cur_node = top_node
+    for item, index in splited[:-1]:
+        if item in cur_node:
+            if isinstance(index, int):
+                cur_node = cur_node[item][index] 
+            else:
+                cur_node = cur_node[item]
+        elif create:
+            if isinstance(index, int):
+                cur_node[item] = [dict()]*index
+                cur_node = cur_node[item][index] 
+            else:
+                cur_node[item] = dict()
+                cur_node = cur_node[item]
+        else:
+            raise ValueError('"{}" does not exists in "{}".'.format(item, name))
+    if splited[-1][0] in cur_node:
+        raise ValueError('"{}" already exists in "{}".'.format(splited[0], name))
+    if isinstance(splited[-1][1], int):
+        cur_node[splited[-1][0]] = [None]*(splited[-1][1]+1)
+        cur_node[splited[-1][0]][splited[-1][1]] = value
+    else:
+        cur_node[splited[-1][0]] = value
+        
 
 def is_leaf(e):
     return isinstance(e, list) and len(e)==2 and isinstance(e[0],str) and \

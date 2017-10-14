@@ -32,17 +32,17 @@ class TestCommands(unittest.TestCase):
 
     def _test_register(self):
         self._test_init()
-        closeup.main(argv=['register', 'app1', prog])
-        closeup.main(argv=['register', 'cpuinfo', 'cat /proc/cpuinfo', '-t', 'command'])
-        closeup.main(argv=['register', 'home', 'HOME', '-t', 'variable'])
+        closeup.main(argv=['register', 'a/app1', prog])
+        closeup.main(argv=['register', 'a/cpuinfo', 'cat /proc/cpuinfo', '-t', 'command'])
+        closeup.main(argv=['register', 'b/home', 'HOME', '-t', 'variable'])
         with captured_output() as (out, err):
-            closeup.main(argv=['show', 'app1'])
+            closeup.main(argv=['show', 'a/app1'])
             output = out.getvalue().strip()
             self.assertTrue(output.find(prog)>0)
-            closeup.main(argv=['show', 'cpuinfo'])
+            closeup.main(argv=['show', 'a/cpuinfo'])
             output = out.getvalue().strip()
             self.assertTrue(output.find('cpuinfo')>0)
-            closeup.main(argv=['show', 'home'])
+            closeup.main(argv=['show', 'b/home'])
             output = out.getvalue().strip()
             self.assertTrue(output.find('HOME')>0)
         print(output)
