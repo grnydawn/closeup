@@ -4,8 +4,9 @@ import unittest, sys, os, shutil
 from contextlib import contextmanager
 from io import StringIO
 
-proj = os.path.join(os.path.dirname(__file__), 'myproj')
-prog = os.path.join(os.path.dirname(__file__), 'prog/fort/app1')
+here = os.path.dirname(os.path.realpath(__file__))
+proj = os.path.join(here, 'myproj')
+prog = os.path.join(here, 'prog/fort/app1')
 
 @contextmanager
 def captured_output():
@@ -25,21 +26,21 @@ class TestCommands(unittest.TestCase):
 
     def _test_init(self):
         self._test_clear()
-        os.chdir(os.path.expanduser('~'))
+        os.chdir(here)
         closeup.main(argv=['init', proj])
         os.chdir(proj)
         self.assertTrue(os.path.exists(os.path.join(proj, '.closeup')))
 
     def _test_register(self):
         self._test_init()
-        closeup.main(argv=['register', 'a/app1', prog])
-        closeup.main(argv=['register', 'a/cpuinfo', 'cat /proc/cpuinfo', '-t', 'command'])
-        closeup.main(argv=['register', 'b/home', 'HOME', '-t', 'variable'])
+        closeup.main(argv=['register', 'a[2]/app1', prog])
+        closeup.main(argv=['register', 'a[1]/cpuinfo', 'cat /proc/cpuinfo', '-t', 'command'])
+        closeup.main(argv=['register', 'b[0]/home', 'HOME', '-t', 'variable'])
         with captured_output() as (out, err):
-            closeup.main(argv=['show', 'a/app1'])
+            closeup.main(argv=['show', 'a[2]/app1'])
             output = out.getvalue().strip()
             self.assertTrue(output.find(prog)>0)
-            closeup.main(argv=['show', 'a/cpuinfo'])
+            closeup.main(argv=['show', 'a[1]/cpuinfo'])
             output = out.getvalue().strip()
             self.assertTrue(output.find('cpuinfo')>0)
             closeup.main(argv=['show', 'b/home'])

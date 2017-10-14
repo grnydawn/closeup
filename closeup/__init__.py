@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 import logging
 
 logger = logging.getLogger()
@@ -12,4 +13,5 @@ logger.debug('Starting closeup module.')
 
 #from . import main
 from .main import main
+from .structure import Name, Link, Register
 

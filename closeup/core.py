@@ -1,8 +1,10 @@
+# -*- coding: UTF-8 -*-
 """Implement core functions.
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 import enum, hashlib, os, stat, json, logging, subprocess
-import struct, urllib.request, zlib, configparser
+#import struct, urllib.request, zlib, configparser
+import struct, zlib, configparser
 
 regpath = os.path.join('.closeup', 'register')
 
@@ -58,20 +60,21 @@ def parse_name(name):
             cur_dict = cur_dict[item_name][index]
         reg_name_list.append(obj_name_list.pop(0))
     return reg_name_list, obj_name_list
-    
+
 def set_dictnode(top_node, name, value, create=True):
+
     splited = split_name(name)
     cur_node = top_node
     for item, index in splited[:-1]:
         if item in cur_node:
             if isinstance(index, int):
-                cur_node = cur_node[item][index] 
+                cur_node = cur_node[item][index]
             else:
                 cur_node = cur_node[item]
         elif create:
             if isinstance(index, int):
-                cur_node[item] = [dict()]*index
-                cur_node = cur_node[item][index] 
+                cur_node[item] = [dict()]*(index+1)
+                cur_node = cur_node[item][index]
             else:
                 cur_node[item] = dict()
                 cur_node = cur_node[item]
@@ -84,7 +87,6 @@ def set_dictnode(top_node, name, value, create=True):
         cur_node[splited[-1][0]][splited[-1][1]] = value
     else:
         cur_node[splited[-1][0]] = value
-        
 
 def is_leaf(e):
     return isinstance(e, list) and len(e)==2 and isinstance(e[0],str) and \
@@ -99,7 +101,7 @@ def get_leaves(e):
             for _v in v:
                 yield _v
         else:
-            return get_leaves(v) 
+            get_leaves(v)
 
 def read_register():
     if os.path.exists(regpath):
@@ -134,7 +136,10 @@ def hash_object(data, obj_type, write=True):
     if write:
         path = os.path.join('.closeup', 'objects', sha1[:2], sha1[2:])
         if not os.path.exists(path):
-            os.makedirs(os.path.dirname(path), exist_ok=True)
+            try:
+                os.makedirs(os.path.dirname(path))
+            except:
+                pass
             write_file(path, zlib.compress(full_data))
     return sha1
 
@@ -232,7 +237,8 @@ def get_local_master_hash():
     master_path = os.path.join('.closeup', 'refs', 'heads', 'master')
     try:
         return read_file(master_path).decode().strip()
-    except FileNotFoundError:
+    #except FileNotFoundError:
+    except Exception:
         return None
 
 def extract_lines(data):
@@ -251,45 +257,45 @@ def extract_lines(data):
             break
     return lines
 
-
-def build_lines_data(lines):
-    """Build byte string from given lines to send to server."""
-    result = []
-    for line in lines:
-        result.append('{:04x}'.format(len(line) + 5).encode())
-        result.append(line)
-        result.append(b'\n')
-    result.append(b'0000')
-    return b''.join(result)
-
-
-def http_request(url, username, password, data=None):
-    """Make an authenticated HTTP request to given URL (GET by default, POST
-    if "data" is not None).
-    """
-    password_manager = urllib.request.HTTPPasswordMgrWithDefaultRealm()
-    password_manager.add_password(None, url, username, password)
-    auth_handler = urllib.request.HTTPBasicAuthHandler(password_manager)
-    opener = urllib.request.build_opener(auth_handler)
-    f = opener.open(url, data=data)
-    return f.read()
-
-
-def get_remote_master_hash(closeup_url, username, password):
-    """Get commit hash of remote master branch, return SHA-1 hex string or
-    None if no remote commits.
-    """
-    url = closeup_url + '/info/refs?service=closeup-receive-pack'
-    response = http_request(url, username, password)
-    lines = extract_lines(response)
-    assert lines[0] == b'# service=closeup-receive-pack\n'
-    assert lines[1] == b''
-    if lines[2][:40] == b'0' * 40:
-        return None
-    master_sha1, master_ref = lines[2].split(b'\x00')[0].split()
-    assert master_ref == b'refs/heads/master'
-    assert len(master_sha1) == 40
-    return master_sha1.decode()
+#
+#def build_lines_data(lines):
+#    """Build byte string from given lines to send to server."""
+#    result = []
+#    for line in lines:
+#        result.append('{:04x}'.format(len(line) + 5).encode())
+#        result.append(line)
+#        result.append(b'\n')
+#    result.append(b'0000')
+#    return b''.join(result)
+#
+#
+#def http_request(url, username, password, data=None):
+#    """Make an authenticated HTTP request to given URL (GET by default, POST
+#    if "data" is not None).
+#    """
+#    password_manager = urllib.request.HTTPPasswordMgrWithDefaultRealm()
+#    password_manager.add_password(None, url, username, password)
+#    auth_handler = urllib.request.HTTPBasicAuthHandler(password_manager)
+#    opener = urllib.request.build_opener(auth_handler)
+#    f = opener.open(url, data=data)
+#    return f.read()
+#
+#
+#def get_remote_master_hash(closeup_url, username, password):
+#    """Get commit hash of remote master branch, return SHA-1 hex string or
+#    None if no remote commits.
+#    """
+#    url = closeup_url + '/info/refs?service=closeup-receive-pack'
+#    response = http_request(url, username, password)
+#    lines = extract_lines(response)
+#    assert lines[0] == b'# service=closeup-receive-pack\n'
+#    assert lines[1] == b''
+#    if lines[2][:40] == b'0' * 40:
+#        return None
+#    master_sha1, master_ref = lines[2].split(b'\x00')[0].split()
+#    assert master_ref == b'refs/heads/master'
+#    assert len(master_sha1) == 40
+#    return master_sha1.decode()
 
 
 def read_image(sha1=None, data=None):
@@ -313,73 +319,73 @@ def read_image(sha1=None, data=None):
         entries.append((mode, path, digest.hex()))
         i = end + 1 + 20
     return entries
-
-
-def find_image_objects(image_sha1):
-    """Return set of SHA-1 hashes of all objects in this image (recursively),
-    including the hash of the image itself.
-    """
-    objects = {image_sha1}
-    for mode, path, sha1 in read_image(sha1=image_sha1):
-        if stat.S_ISDIR(mode):
-            objects.update(find_image_objects(sha1))
-        else:
-            objects.add(sha1)
-    return objects
-
-
-def find_commit_objects(commit_sha1):
-    """Return set of SHA-1 hashes of all objects in this commit (recursively),
-    its tree, its parents, and the hash of the commit itself.
-    """
-    objects = {commit_sha1}
-    obj_type, commit = read_object(commit_sha1)
-    assert obj_type == 'commit'
-    lines = commit.decode().splitlines()
-    tree = next(l[5:45] for l in lines if l.startswith('tree '))
-    objects.update(find_tree_objects(tree))
-    parents = (l[7:47] for l in lines if l.startswith('parent '))
-    for parent in parents:
-        objects.update(find_commit_objects(parent))
-    return objects
-
-
-def find_missing_objects(local_sha1, remote_sha1):
-    """Return set of SHA-1 hashes of objects in local commit that are missing
-    at the remote (based on the given remote commit hash).
-    """
-    local_objects = find_commit_objects(local_sha1)
-    if remote_sha1 is None:
-        return local_objects
-    remote_objects = find_commit_objects(remote_sha1)
-    return local_objects - remote_objects
-
-
-def encode_pack_object(obj):
-    """Encode a single object for a pack file and return bytes (variable-
-    length header followed by compressed data bytes).
-    """
-    obj_type, data = read_object(obj)
-    type_num = ObjectType[obj_type].value
-    size = len(data)
-    byte = (type_num << 4) | (size & 0x0f)
-    size >>= 4
-    header = []
-    while size:
-        header.append(byte | 0x80)
-        byte = size & 0x7f
-        size >>= 7
-    header.append(byte)
-    return bytes(header) + zlib.compress(data)
-
-
-def create_pack(objects):
-    """Create pack file containing all objects in given given set of SHA-1
-    hashes, return data bytes of full pack file.
-    """
-    header = struct.pack('!4sLL', b'PACK', 2, len(objects))
-    body = b''.join(encode_pack_object(o) for o in sorted(objects))
-    contents = header + body
-    sha1 = hashlib.sha1(contents).digest()
-    data = contents + sha1
-    return data
+#
+#
+#def find_image_objects(image_sha1):
+#    """Return set of SHA-1 hashes of all objects in this image (recursively),
+#    including the hash of the image itself.
+#    """
+#    objects = {image_sha1}
+#    for mode, path, sha1 in read_image(sha1=image_sha1):
+#        if stat.S_ISDIR(mode):
+#            objects.update(find_image_objects(sha1))
+#        else:
+#            objects.add(sha1)
+#    return objects
+#
+#
+#def find_commit_objects(commit_sha1):
+#    """Return set of SHA-1 hashes of all objects in this commit (recursively),
+#    its tree, its parents, and the hash of the commit itself.
+#    """
+#    objects = {commit_sha1}
+#    obj_type, commit = read_object(commit_sha1)
+#    assert obj_type == 'commit'
+#    lines = commit.decode().splitlines()
+#    tree = next(l[5:45] for l in lines if l.startswith('tree '))
+#    objects.update(find_tree_objects(tree))
+#    parents = (l[7:47] for l in lines if l.startswith('parent '))
+#    for parent in parents:
+#        objects.update(find_commit_objects(parent))
+#    return objects
+#
+#
+#def find_missing_objects(local_sha1, remote_sha1):
+#    """Return set of SHA-1 hashes of objects in local commit that are missing
+#    at the remote (based on the given remote commit hash).
+#    """
+#    local_objects = find_commit_objects(local_sha1)
+#    if remote_sha1 is None:
+#        return local_objects
+#    remote_objects = find_commit_objects(remote_sha1)
+#    return local_objects - remote_objects
+#
+#
+#def encode_pack_object(obj):
+#    """Encode a single object for a pack file and return bytes (variable-
+#    length header followed by compressed data bytes).
+#    """
+#    obj_type, data = read_object(obj)
+#    type_num = ObjectType[obj_type].value
+#    size = len(data)
+#    byte = (type_num << 4) | (size & 0x0f)
+#    size >>= 4
+#    header = []
+#    while size:
+#        header.append(byte | 0x80)
+#        byte = size & 0x7f
+#        size >>= 7
+#    header.append(byte)
+#    return bytes(header) + zlib.compress(data)
+#
+#
+#def create_pack(objects):
+#    """Create pack file containing all objects in given given set of SHA-1
+#    hashes, return data bytes of full pack file.
+#    """
+#    header = struct.pack('!4sLL', b'PACK', 2, len(objects))
+#    body = b''.join(encode_pack_object(o) for o in sorted(objects))
+#    contents = header + body
+#    sha1 = hashlib.sha1(contents).digest()
+#    data = contents + sha1
+#    return data

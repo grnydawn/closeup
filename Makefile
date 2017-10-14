@@ -1,5 +1,6 @@
 test:
 	cd tests && python -m unittest test_commands
+	cd tests && python -m unittest test_structure
 
 install:
 	python setup.py install --user --record installed_files.txt
