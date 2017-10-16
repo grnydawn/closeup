@@ -3,7 +3,7 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 import sys, argparse
-from . import commands
+from . import commands, util
 
 def main(argv=None):
     parser = argparse.ArgumentParser()
@@ -12,12 +12,12 @@ def main(argv=None):
 
     sub_parser = sub_parsers.add_parser('init',
             help='initialize a new repo')
-    sub_parser.add_argument('repo',
+    sub_parser.add_argument('repo', type=util.cmd_arg,
             help='directory name for new repo')
 
     sub_parser = sub_parsers.add_parser('register',
             help='add object(s) to register')
-    sub_parser.add_argument('name',
+    sub_parser.add_argument('name', type=util.cmd_arg,
             help='name for objects')
     sub_parser.add_argument('directions', nargs='+', metavar='direction',
             help='direction(s) of objects to register')
@@ -27,12 +27,12 @@ def main(argv=None):
 
     sub_parser = sub_parsers.add_parser('show',
             help='show content of name')
-    sub_parser.add_argument('names', nargs='+', metavar='name',
+    sub_parser.add_argument('names', nargs='+', metavar='name', type=util.cmd_arg,
             help='name(s) for objects')
 
     sub_parser = sub_parsers.add_parser('record',
             help='record current state of register to master branch')
-    sub_parser.add_argument('name',
+    sub_parser.add_argument('name', type=util.cmd_arg,
             help='name for image')
     sub_parser.add_argument('-m', '--message', default='Not specified.',
             help='text of commit message')
@@ -93,8 +93,8 @@ def main(argv=None):
     elif args.command == 'cat-file':
         try:
             commands.cat_file(args.mode, args.hash_prefix)
-        except ValueError as error:
-            print(error, file=sys.stderr)
+        except ValueError as err:
+            logging.getLogger('closeup').error(err, exc_info=True)
             sys.exit(1)
     elif args.command == 'diff':
         commands.diff()

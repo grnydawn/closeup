@@ -14,7 +14,7 @@ def captured_output():
     old_out, old_err = sys.stdout, sys.stderr
     try:
         sys.stdout, sys.stderr = new_out, new_err
-        yield sys.stdout, sys.stderr
+        yield sys.stdout, sys.stderr, old_out, old_err
     finally:
         sys.stdout, sys.stderr = old_out, old_err
 
@@ -36,26 +36,25 @@ class TestCommands(unittest.TestCase):
         closeup.main(argv=['register', 'a[2]/app1', prog])
         closeup.main(argv=['register', 'a[1]/cpuinfo', 'cat /proc/cpuinfo', '-t', 'command'])
         closeup.main(argv=['register', 'b[0]/home', 'HOME', '-t', 'variable'])
-        with captured_output() as (out, err):
+        with captured_output() as (out, err, stdout, stderr):
             closeup.main(argv=['show', 'a[2]/app1'])
             output = out.getvalue().strip()
             self.assertTrue(output.find(prog)>0)
             closeup.main(argv=['show', 'a[1]/cpuinfo'])
             output = out.getvalue().strip()
             self.assertTrue(output.find('cpuinfo')>0)
-            closeup.main(argv=['show', 'b/home'])
+            closeup.main(argv=['show', 'b[0]/home'])
             output = out.getvalue().strip()
             self.assertTrue(output.find('HOME')>0)
-        print(output)
 
     def test_record(self):
         self._test_register()
         closeup.main(argv=['record', 'rec1'])
-        with captured_output() as (out, err):
-            closeup.main(argv=['show', 'rec1'])
-            output = out.getvalue().strip()
-            #self.assertTrue(output.find(prog)>0)
-        print(output)
+#        with captured_output() as (out, err, stdout, stderr):
+        closeup.main(argv=['show', 'rec1'])
+#            output = out.getvalue().strip()
+#            #stdout.write('>>> {} <<<\n'.format(output))
+#            self.assertTrue(output.find('rec1')>0)
 
 if __name__ == '__main__':
     unittest.main()

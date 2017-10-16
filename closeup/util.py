@@ -1,9 +1,10 @@
 """Implement utility functions.
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
-import os
+import os, sys
 
 regpath = os.path.join('.closeup', 'register')
+albumpath = os.path.join('.closeup', 'album')
 
 #class ObjectType(enum.Enum):
 #    """Object type enum."""
@@ -30,4 +31,10 @@ def write_bytefile(path, data):
     """Write data bytes to file at given path."""
     with open(path, 'wb') as f:
         f.write(data)
+
+def cmd_arg(text):
+    try:
+        return text.decode(sys.getfilesystemencoding())
+    except:
+        return text
 

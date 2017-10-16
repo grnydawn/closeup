@@ -4,87 +4,100 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 import os, time, getpass, logging
-from . import core, structure
+from . import core, structure, exception, util
 
 def init(repo):
     """Create directory for repo and initialize .closeup directory."""
-    os.mkdir(repo)
-    os.mkdir(os.path.join(repo, '.closeup'))
-    for name in ['objects', 'refs', 'refs/heads', 'refs/records']:
-        os.mkdir(os.path.join(repo, '.closeup', name))
-    core.write_file(os.path.join(repo, '.closeup', 'HEAD'), b'ref: refs/heads/master')
-    print('initialized empty repository: {}'.format(repo))
+    logging.getLogger('closeup').debug('calling init({})'.format(repo))
+    try:
+        os.mkdir(repo)
+        os.mkdir(os.path.join(repo, '.closeup'))
+        for name in ['objects', 'refs', 'refs/heads', 'refs/records']:
+            os.mkdir(os.path.join(repo, '.closeup', name))
+        core.write_file(os.path.join(repo, '.closeup', 'HEAD'), b'ref: refs/heads/master')
+        print('initialized empty repository: {}'.format(repo))
+    except exception.CloseupNameError as err:
+        logging.getLogger('closeup').error(err, exc_info=True)
+        #print('{}'.format(err))
+    finally:
+        pass
 
 def register(name, items, reg_type, **kwargs):
     """Add all directions to closeup register."""
-    reg = structure.load_register()
-    kwargs['reg_type'] = reg_type
-    reg.add(name, items, kwargs)
-    reg.dump()
+    logging.getLogger('closeup').debug('calling register({}, {}, {}, {})'.format(
+        name, items, reg_type, kwargs))
+    try:
+        reg = structure.load_register()
+        kwargs['reg_type'] = reg_type
+        reg.add(name, items, kwargs)
+        reg.dump()
+    except exception.CloseupNameError as err:
+        logging.getLogger('closeup').error(err, exc_info=True)
+        #print('{}'.format(err))
+    finally:
+        pass
 
 def show(names):
-    """show content of objects."""
-    logging.debug('calling show({})'.format(names))
-    def print_leaf(e, n):
-        print('{} "{}" is registered with "{}".'.format(e[1]['reg_type'], n, e[0]))
-    for name in names:
-        reg_name_list, obj_name_list = core.parse_name(name)
-        if reg_name_list:
-            reg_name_str_list = [n for n,i in reg_name_list[:-1]]
-            reg_name_str_list.append(reg_name_list[-1][0] if reg_name_list[-1][1] is None \
-                else '{}[{}]'.format(*reg_name_list[-1]))
-            reg_name_str = '/'.join(reg_name_str_list)
-            entry = core.get_register_entry(reg_name_list)
-            if isinstance(entry, dict):
-                print('name "{}" contains "{}".'.format(
-                    reg_name_str, ', '.join(entry.keys())))
-            elif isinstance(entry, list):
-                if core.is_leaf(entry):
-                    print_leaf(entry, reg_name_str)
-                elif core.are_leaves(entry):
-                    for e in entry:
-                        print_leaf(e, reg_name_str)
-                else:
-                    print('name "{}" contains "{}".'.format(reg_name_str, entry))
+    """show content of objects according to names or hashes."""
+    logging.getLogger('closeup').debug('calling show({})'.format(names))
+    try:
+        for name in names:
+            reg_name, reg_data, remained = structure.register_split_name(name)
+            if remained:
+                # select reader for remained
+                core.show_object(reg_data, remained)
             else:
-                    print('Unknown name "{}" contains "{}".'.format(reg_name_str, entry))
-#            if obj_name_list:
-#                if True: # if image hash is not provided
-#                    image_string = 'Current'
-#                obj_data = 'Not implemented yet.'
-#                print('{} value of "{}" is:\n{}'.format(
-#                    image_string, '/'.join(obj_name_list), obj_data))
-        else:
-            print('name "{}" is not found.'.format(name))
+                #import pdb; pdb.set_trace()
+                if reg_name:
+                    core.show_register(reg_name, reg_data)
+                    if structure.is_link(reg_data):
+                        core.show_object(reg_data, remained)
+            image_name, image_hash, remained = structure.image_split_name(name)
+            if image_name and image_hash:
+                core.show_image(image_name, image_hash)
+                #print('image {}: {}'.format(structure.pack_name(image_name), image_hash))
+
+    except exception.NameAlreadyExistError as err:
+        logging.getLogger('closeup').error(err, exc_info=True)
+    finally:
+        pass
 
 def record(name, message):
     """Record the current state of the register to master with given message.
     Return hash of record object.
     """
-    image = core.write_image()
-    parent = core.get_local_master_hash()
-    author = getpass.getuser()
-    timestamp = int(time.mktime(time.localtime()))
-    utc_offset = -time.timezone
-    author_time = '{} {}{:02}{:02}'.format(
-            timestamp,
-            '+' if utc_offset > 0 else '-',
-            abs(utc_offset) // 3600,
-            (abs(utc_offset) // 60) % 60)
-    lines = ['image ' + image]
-    if parent:
-        lines.append('parent ' + parent)
-    lines.append('author {} {}'.format(author, author_time))
-    lines.append('recorder {} {}'.format(author, author_time))
-    lines.append('')
-    lines.append(message)
-    lines.append('')
-    data = '\n'.join(lines).encode()
-    sha1 = core.hash_object(data, 'record')
-    master_path = os.path.join('.closeup', 'refs', 'heads', 'master')
-    core.write_file(master_path, (sha1 + '\n').encode())
-    print('recorded to master: {}({:7})'.format(name, sha1))
-    return sha1
+    try:
+        reg_hash = core.write_image_body()
+        album_hash = core.hash_file(util.albumpath)
+        parent = core.get_local_master_hash()
+        author = getpass.getuser()
+        timestamp = int(time.mktime(time.localtime()))
+        utc_offset = -time.timezone
+        author_time = '{} {}{:02}{:02}'.format(
+                timestamp,
+                '+' if utc_offset > 0 else '-',
+                abs(utc_offset) // 3600,
+                (abs(utc_offset) // 60) % 60)
+        lines = ['register ' + reg_hash]
+        lines.append('album ' + album_hash)
+        if parent:
+            lines.append('parent ' + parent)
+        lines.append('recorder {} {}'.format(author, author_time))
+        lines.append('message {}'.format(message))
+        data = '\n'.join(lines).encode()
+        sha1 = core.hash_object(data, 'image')
+        album = structure.load_album()
+        album.add(name, sha1)
+        album.dump()
+        master_path = os.path.join('.closeup', 'refs', 'heads', 'master')
+        core.write_file(master_path, (sha1 + '\n').encode())
+        print('recorded an image to master: {}({:7})'.format(name, sha1))
+        return sha1
+    except exception.CloseupNameError as err:
+        logging.getLogger('closeup').error(err, exc_info=True)
+    finally:
+        pass
+
 #
 #
 #def cat_file(mode, sha1_prefix):

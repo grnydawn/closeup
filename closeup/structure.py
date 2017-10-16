@@ -2,81 +2,12 @@
 """Implement functions handling structures.
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
-import re, os, json
-from . import util
+import re, os, json, logging, hashlib
+from . import util, exception
 
 #######################################################################
 #   Internal Functions
 #######################################################################
-
-#def split_name(name):
-#    parsed = []
-#    for item in name.split('/'):
-#        poslb = item.find('[')
-#        posrb = item.find(']')
-#        if poslb<=0 or posrb<=0 or posrb<=poslb or \
-#            (posrb+1)!=len(item) or not item[poslb+1:posrb].isdigit():
-#            parsed.append((item, None))
-#        else:
-#            parsed.append((item[:poslb], int(item[poslb+1:posrb])))
-#    return parsed
-#
-#def parse_name(name):
-#    """Split and parse name into namepath."""
-#    reg_name_list = []
-#    obj_name_list = split_name(name)
-#    cur_dict = read_register()
-#    for item_name, index in list(obj_name_list):
-#        if item_name not in cur_dict:
-#            return reg_name_list, obj_name_list
-#        if index is None:
-#            cur_dict = cur_dict[item_name]
-#        else:
-#            cur_dict = cur_dict[item_name][index]
-#        reg_name_list.append(obj_name_list.pop(0))
-#    return reg_name_list, obj_name_list
-#
-#def set_dictnode(top_node, name, value, create=True):
-#
-#    splited = split_name(name)
-#    cur_node = top_node
-#    for item, index in splited[:-1]:
-#        if item in cur_node:
-#            if isinstance(index, int):
-#                cur_node = cur_node[item][index]
-#            else:
-#                cur_node = cur_node[item]
-#        elif create:
-#            if isinstance(index, int):
-#                cur_node[item] = [dict()]*(index+1)
-#                cur_node = cur_node[item][index]
-#            else:
-#                cur_node[item] = dict()
-#                cur_node = cur_node[item]
-#        else:
-#            raise ValueError('"{}" does not exists in "{}".'.format(item, name))
-#    if splited[-1][0] in cur_node:
-#        raise ValueError('"{}" already exists in "{}".'.format(splited[0], name))
-#    if isinstance(splited[-1][1], int):
-#        cur_node[splited[-1][0]] = [None]*(splited[-1][1]+1)
-#        cur_node[splited[-1][0]][splited[-1][1]] = value
-#    else:
-#        cur_node[splited[-1][0]] = value
-#
-#def is_leaf(e):
-#    return isinstance(e, list) and len(e)==2 and isinstance(e[0],str) and \
-#        isinstance(e[1],dict) and 'reg_type' in e[1]
-#
-#def are_leaves(e):
-#    return isinstance(e, list) and all(is_leaf(_e) for _e in e)
-#
-#def get_leaves(e):
-#    for k, v in e.items():
-#        if are_leaves(v):
-#            for _v in v:
-#                yield _v
-#        else:
-#            get_leaves(v)
 
 #######################################################################
 #  Classes
@@ -104,6 +35,9 @@ class Name(object):
 
     next = __next__
 
+    def __getitem__(self, sliced):
+        return self.pairs[sliced]
+
     def _split_name(self, name):
         pairs = []
         raw_pairs = name.strip().strip('/').split(self.delimiter)
@@ -116,22 +50,27 @@ class Name(object):
                 if match:
                     pairs.append((match.group('ident'), None))
                 else:
-                    raise Exception('Can not parse {}'.format(raw_pair))
+                    raise exception.NameParserError('Can not parse {}'.format(raw_pair))
         return pairs
 
     def __str__(self):
-        pairs = [self.name]
+        pairs = []
         for ident, index in self:
-            pairs.append((ident, str(index)))
-        return str(pairs)
+            if isinstance(index, int):
+                pairs.append('{}[{:d}]'.format(ident,index))
+            else:
+                pairs.append(ident)
+        return '/'.join(pairs)
 
-class Link(object):
-    def __init__(self, item, attr):
-        self.item = item
-        self.attr = attr
+    @classmethod
+    def pack(cls, nameobj):
+        obj = cls('dummy')
+        obj.pairs = nameobj
+        return str(obj)
+
 
 # disallow update a node, rather allow delete and add
-class Register(object):
+class NameBook(object):
 
     def __init__(self, path):
         self.path = path
@@ -156,9 +95,13 @@ class Register(object):
                             cur_node[ident] += [{} for _ in range(difflen)]
                         cur_node = cur_node[ident][index]
                     else:
-                        raise Exception('{} is alread exists but '+
+                        raise exception.NameNotAListError('"{}" is alread exists but '+
                             'not a list.'.format(str(ident)))
                 else:
+                    if isinstance(cur_node[ident], list) and \
+                        not is_link(cur_node[ident]):
+                        raise exception.NameNotALinkError('"{}" is a list but '.format(str(ident))+
+                            'index is not specified at "{}".'.format(Name.pack(nameobj)))
                     last_parent = cur_node
                     identifier = ident
                     cur_node = cur_node[ident]
@@ -174,7 +117,7 @@ class Register(object):
                     identifier = ident
                     cur_node = cur_node[ident]
             else:
-                raise Exception('({},{}) is not in {}.'.format(
+                raise exception.NameNotFoundError('({},{}) is not in {}.'.format(
                     str(ident), str(index), str(nameobj)))
         return last_parent, identifier
 
@@ -186,10 +129,7 @@ class Register(object):
             json.dump(self.json, f)
 
     def add(self, name, items, attrs):
-        nameobj = Name(name)
-        last_parent, ident = self._get_or_create(nameobj)
-        array = [ ('\x00', item, attrs) for item in items ]
-        last_parent[ident] = array
+        raise NotImplemented('Subclass should implement "add" method.')
 
     def remove(self, name):
         nameobj = Name(name)
@@ -201,9 +141,99 @@ class Register(object):
         last_parent, identifier = self._get(nameobj)
         return last_parent[identifier]
 
+    def get_hash(self):
+        return hashlib.sha1(json.dumps(self.json, separators=(',',':')).encode()).hexdigest()
+
+class Register(NameBook):
+
+    def add(self, name, items, attrs):
+        nameobj = Name(name)
+        last_parent, ident = self._get_or_create(nameobj)
+        array = [ ['\x00', item, attrs] for item in items ]
+        last_parent[ident] = array
+
+class Album(NameBook):
+
+    def add(self, name, sha):
+        nameobj = Name(name)
+        last_parent, ident = self._get_or_create(nameobj)
+        last_parent[ident] = sha
+
 #######################################################################
 #  Public Functions
 #######################################################################
 
 def load_register():
     return Register(util.regpath)
+
+def register_split_name(name):
+    """split name into register name and remained name."""
+    logging.debug('calling register_split_name({})'.format(name))
+    register = load_register()
+    nameobj = Name(name)
+    reg_name = list()
+    rem_name = list()
+    reg_parent, reg_key, reg_data = None, None, None
+    for i, n in enumerate(nameobj):
+        try:
+            reg_parent, reg_key = register._get(nameobj[:i+1])
+        except exception.CloseupNameError as err:
+            break
+        finally:
+            if reg_parent and reg_key:
+                reg_name = nameobj[:i+1]
+                rem_name = nameobj[i+2:]
+                reg_data = reg_parent[reg_key]
+    return reg_name, reg_data, rem_name
+
+def is_link(link):
+    def _is_link(item):
+        return isinstance(item, list) and len(item)==3 and \
+            item[0]=='\x00' and isinstance(item[2], dict) and \
+            'reg_type' in item[2]
+    return isinstance(link, list) and all( _is_link(item) for item in link)
+
+def is_leaf(leaf):
+    return not isinstance(leaf, list) and not isinstance(leaf, dict)
+
+def get_leaves(dictnode, func, bag=[]):
+    for k, v in dictnode.items():
+        if func(v):
+            bag += v
+        elif isinstance(v, list):
+            for _v in v:
+                get_leaves(_v, func)
+        elif isinstance(v, dict):
+            get_leaves(v, func)
+    return bag
+
+def get_links(dictnode, bag=[]):
+    return get_leaves(dictnode, is_link)
+
+def pack_name(nameobj):
+    return Name.pack(nameobj)
+
+def load_album():
+    return Album(util.albumpath)
+
+def image_split_name(name):
+    """split name into image name and remained name."""
+    logging.getLogger('closeup').debug('calling image_split_name({})'.format(name))
+    album = load_album()
+    nameobj = Name(name)
+    img_name = list()
+    rem_name = list()
+    img_parent, img_key, img_data = None, None, None
+    for i, n in enumerate(nameobj):
+        try:
+            img_parent, img_key = album._get(nameobj[:i+1])
+        except exception.CloseupNameError as err:
+            logging.getLogger('closeup').debug('{}'.format(err))
+            break
+        finally:
+            if img_parent and img_key:
+                img_name = nameobj[:i+1]
+                rem_name = nameobj[i+2:]
+                img_data = img_parent[img_key]
+    return img_name, img_data, rem_name
+

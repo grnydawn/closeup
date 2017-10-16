@@ -8,11 +8,10 @@ import unittest, sys, os, shutil
 
 here = os.path.dirname(os.path.realpath(__file__))
 examples = [
-    ('a/b/c/d', [1],),
-    ('b/b/c/d/',[2]),
-    ('c[0]/b/c/d', [{1:2},1,2]),
-    ('d/b/[2]c/d', [[1,2]]),
-    ('e/b/c/d[2]', [1,3])
+    ('a/b/c/d[0]', ['\x00', 1, {'reg_type': 'ttt'}]),
+    ('b/b[2]/c/e[1]', ['\x00', 1, {'reg_type': 'ttt'}]),
+    ('c/b/c/d[2]', ['\x00', 1, {'reg_type': 'ttt'}]),
+    ('d/b/c[2]/d[2]', ['\x00', 1, {'reg_type': 'ttt'}]),
 ]
 
 class TestCommands(unittest.TestCase):

@@ -5,6 +5,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import enum, hashlib, os, stat, json, logging, subprocess
 #import struct, urllib.request, zlib, configparser
 import struct, zlib, configparser
+from . import structure
 
 regpath = os.path.join('.closeup', 'register')
 
@@ -34,97 +35,28 @@ def write_file(path, data):
     with open(path, 'wb') as f:
         f.write(data)
 
-def split_name(name):
-    parsed = []
-    for item in name.split('/'):
-        poslb = item.find('[')
-        posrb = item.find(']')
-        if poslb<=0 or posrb<=0 or posrb<=poslb or \
-            (posrb+1)!=len(item) or not item[poslb+1:posrb].isdigit():
-            parsed.append((item, None))
+def show_register(reg_name, reg_data):
+    """Print register."""
+    if reg_name:
+        out = ['register name "{}": '.format(structure.pack_name(reg_name))]
+        if structure.is_link(reg_data):
+            for _, item, attr in reg_data:
+                out.append('{}({}) '.format(str(item), str(attr)))
         else:
-            parsed.append((item[:poslb], int(item[poslb+1:posrb])))
-    return parsed
-
-def parse_name(name):
-    """Split and parse name into namepath."""
-    reg_name_list = []
-    obj_name_list = split_name(name)
-    cur_dict = read_register()
-    for item_name, index in list(obj_name_list):
-        if item_name not in cur_dict:
-            return reg_name_list, obj_name_list
-        if index is None:
-            cur_dict = cur_dict[item_name]
-        else:
-            cur_dict = cur_dict[item_name][index]
-        reg_name_list.append(obj_name_list.pop(0))
-    return reg_name_list, obj_name_list
-
-def set_dictnode(top_node, name, value, create=True):
-
-    splited = split_name(name)
-    cur_node = top_node
-    for item, index in splited[:-1]:
-        if item in cur_node:
-            if isinstance(index, int):
-                cur_node = cur_node[item][index]
-            else:
-                cur_node = cur_node[item]
-        elif create:
-            if isinstance(index, int):
-                cur_node[item] = [dict()]*(index+1)
-                cur_node = cur_node[item][index]
-            else:
-                cur_node[item] = dict()
-                cur_node = cur_node[item]
-        else:
-            raise ValueError('"{}" does not exists in "{}".'.format(item, name))
-    if splited[-1][0] in cur_node:
-        raise ValueError('"{}" already exists in "{}".'.format(splited[0], name))
-    if isinstance(splited[-1][1], int):
-        cur_node[splited[-1][0]] = [None]*(splited[-1][1]+1)
-        cur_node[splited[-1][0]][splited[-1][1]] = value
+            out.append(str(reg_data))
     else:
-        cur_node[splited[-1][0]] = value
+        out = ['"{}" is not found in register.'.format(structure.pack_name(reg_name))]
 
-def is_leaf(e):
-    return isinstance(e, list) and len(e)==2 and isinstance(e[0],str) and \
-        isinstance(e[1],dict) and 'reg_type' in e[1]
+    print(''.join(out))
 
-def are_leaves(e):
-    return isinstance(e, list) and all(is_leaf(_e) for _e in e)
+def show_image(img_name, sha1):
+    """Print image."""
+    image = read_image(sha1)
+    for kind, value in image.items():
+        print('{}: {}'.format(kind, value))
 
-def get_leaves(e):
-    for k, v in e.items():
-        if are_leaves(v):
-            for _v in v:
-                yield _v
-        else:
-            get_leaves(v)
-
-def read_register():
-    if os.path.exists(regpath):
-        with open(regpath, 'r') as freg:
-            return json.load(freg)
-    else:
-        return {}
-
-def write_register(reg_dict):
-    with open(regpath, 'w') as freg:
-        json.dump(reg_dict, freg)
-
-def get_register_entry(reg_name_list):
-    """Return an item in register."""
-    logging.debug('calling get_register_entry({})'.format(reg_name_list))
-    cur_container = read_register()
-    for item_name, index in reg_name_list:
-        if isinstance(index, int):
-            cur_container = cur_container[item_name][index]
-        else:
-            cur_container = cur_container[item_name]
-    logging.debug('returning get_register_entry with {}'.format(cur_container))
-    return cur_container
+def show_object(reg_link, obj_name):
+    pass
 
 def hash_object(data, obj_type, write=True):
     """Compute hash of object data of given type and write to object store if
@@ -148,14 +80,15 @@ def hash_command(command):
     return hash_object(stdout, 'command')
 
 def hash_file(path):
+    #TODO save directory tree
     return hash_object(b'', 'path')
 
 def hash_variable(var):
     return hash_object(os.path.expandvars('$'+var).encode(), 'variable')
 
-def write_image():
-    reg_dict = read_register()
-    for item, attr in get_leaves(reg_dict):
+def write_image_body():
+    reg = structure.load_register()
+    for _, item, attr in structure.get_links(reg.json):
         reg_type = attr['reg_type']
         if reg_type == 'path':
             sha1 = hash_file(item)
@@ -164,8 +97,7 @@ def write_image():
         elif reg_type == 'variable':
             sha1 = hash_variable(item)
         attr['sha'] = sha1
-    write_register(reg_dict)
-    return hashlib.sha1(json.dumps(reg_dict, separators=(',',':')).encode()).hexdigest()
+    return hash_file(reg.path)
 
 def find_object(sha1_prefix):
     """Find object with given SHA-1 prefix and return path to object in object
@@ -298,27 +230,42 @@ def extract_lines(data):
 #    return master_sha1.decode()
 
 
-def read_image(sha1=None, data=None):
+def read_image(sha1):
     """Read image object with given SHA-1 (hex string) or data, and return list
     of (mode, path, sha1) tuples.
     """
     if sha1 is not None:
         obj_type, data = read_object(sha1)
         assert obj_type == 'image'
-    elif data is None:
-        raise TypeError('must specify "sha1" or "data"')
-    i = 0
-    entries = []
-    for _ in range(1000):
-        end = data.find(b'\x00', i)
-        if end == -1:
-            break
-        mode_str, path = data[i:end].decode().split()
-        mode = int(mode_str, 8)
-        digest = data[end + 1:end + 21]
-        entries.append((mode, path, digest.hex()))
-        i = end + 1 + 20
-    return entries
+    image = {}
+    for item in data.split('\n'):
+        value = None
+        kind, data = item.split(' ', 1)
+        if kind in ['register', 'album']:
+            obj_type, data = read_object(data)
+            assert obj_type in ['image', 'path']
+            # TODO handle data
+            value = data
+        elif kind in ['parent', 'recorder', 'message']:
+            value = data
+        else:
+            raise Exception('Not supported kind: {}'.format(kind))
+        image[kind] = value
+    return image
+
+#    i = 0
+#    entries = []
+#    for _ in range(1000):
+#        import pdb; pdb.set_trace()
+#        end = data.find(b'\x00', i)
+#        if end == -1:
+#            break
+#        mode_str, path = data[i:end].decode().split()
+#        mode = int(mode_str, 8)
+#        digest = data[end + 1:end + 21]
+#        entries.append((mode, path, digest.hex()))
+#        i = end + 1 + 20
+#    return entries
 #
 #
 #def find_image_objects(image_sha1):
