@@ -22,6 +22,9 @@ dirpath_type = 'directory'
 command_type = 'command'
 variable_type = 'variable'
 
+# misc. types
+nametree_type = 'nametree'
+
 def setup_logging( default_path='logging.json',
     default_level=logging.INFO, env_key='LOG_CFG'):
     """Setup logging configuration

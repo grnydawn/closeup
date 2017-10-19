@@ -9,6 +9,7 @@ class NamePath(object):
     def __init__(self, name):
         self.name = name
         self.path = []
+        self.idx = 0
         for part in self.name.split(util.name_delimiter):
             if not part:
                 continue
@@ -21,6 +22,19 @@ class NamePath(object):
                     self.path.append(part)
             else:
                 self.path.append(part)
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        self.idx += 1
+        try:
+            return self.path[self.idx-1]
+        except IndexError:
+            self.idx = 0
+            raise StopIteration
+
+    next = __next__
 
     def match(self, jsondata):
         print ('BBBBB')

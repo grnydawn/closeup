@@ -3,7 +3,7 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 import os, time, getpass, logging
-from . import util, namepath, jsonfile, filesys
+from . import util, namepath, jsonfile, filesys, report
 logger = logging.getLogger('closeup')
 
 def init(repo):
@@ -52,69 +52,35 @@ def snap(name, msg):
     album_file = jsonfile.load_album()
     if name=='*':
         name_obj = jsonfile.generate_image_name_object(parent)
+    else:
+        name_obj = namepath.parse(name)
     album_file.add(util.image_type, name_obj, sha1)
     album_file.dump()
     print('recorded an image to master: {}({:7})'.format(
         namepath.pack(name_obj), sha1))
     return sha1
 
-#def show(names):
-#    """show content of objects according to names or hashes."""
-#    logging.getLogger('closeup').debug('calling show({})'.format(names))
-#    try:
-#        for name in names:
-#            reg_name, reg_data, remained = structure.register_split_name(name)
-#            if remained:
-#                # select reader for remained
-#                core.show_object(reg_data, remained)
-#            else:
-#                #import pdb; pdb.set_trace()
-#                if reg_name:
-#                    core.show_register(reg_name, reg_data)
-#                    if structure.is_link(reg_data):
-#                        core.show_object(reg_data, remained)
-#            image_name, image_hash, remained = structure.image_split_name(name)
-#            if image_name and image_hash:
-#                core.show_image(image_name, image_hash)
-#                #print('image {}: {}'.format(structure.pack_name(image_name), image_hash))
-#
-#    except exception.NameAlreadyExistError as err:
-#        logging.getLogger('closeup').error(err, exc_info=True)
-#    finally:
-#        pass
-#
-#def record(name, message):
-#    """Record the current state of the register to master with given message.
-#    Return hash of record object.
-#    """
-#    try:
-#        reg_hash = core.write_image_body()
-#        album_hash = core.hash_file(util.albumpath)
-#        parent = core.get_local_master_hash()
-#        author = getpass.getuser()
-#        timestamp = int(time.mktime(time.localtime()))
-#        utc_offset = -time.timezone
-#        author_time = '{} {}{:02}{:02}'.format(
-#                timestamp,
-#                '+' if utc_offset > 0 else '-',
-#                abs(utc_offset) // 3600,
-#                (abs(utc_offset) // 60) % 60)
-#        lines = ['register ' + reg_hash]
-#        lines.append('album ' + album_hash)
-#        if parent:
-#            lines.append('parent ' + parent)
-#        lines.append('recorder {} {}'.format(author, author_time))
-#        lines.append('message {}'.format(message))
-#        data = '\n'.join(lines).encode()
-#        sha1 = core.hash_object(data, 'image')
-#        album = structure.load_album()
-#        album.add(name, sha1)
-#        album.dump()
-#        master_path = os.path.join('.closeup', 'refs', 'heads', 'master')
-#        core.write_file(master_path, (sha1 + '\n').encode())
-#        print('recorded an image to master: {}({:7})'.format(name, sha1))
-#        return sha1
-#    except exception.CloseupNameError as err:
-#        logging.getLogger('closeup').error(err, exc_info=True)
-#    finally:
-#        pass
+def show(names):
+    """show content of objects according to names or hashes."""
+    logger.debug('calling show("{}")'.format(names))
+    if not names:
+        reg_file = jsonfile.load_register()
+        print('\nTop of register contains:\n    {}'.format(reg_file.summary()))
+        album_file = jsonfile.load_album()
+        print('\nTop of album contains:\n    {}'.format(album_file.summary()))
+        return
+
+    for name in names:
+        name_obj = namepath.parse(name)
+        name_type, content = None, None
+        reg_file = jsonfile.load_register()
+        name_type, content = reg_file.get(name_obj)
+        if name_type is None or content is None:
+            album_file = jsonfile.load_album()
+            name_type, content = album_file.get(name_obj)
+        if name_type is None or content is None:
+            name_type, content = filesys.get(name_obj)
+        if name_type is not None or content is not None:
+            report.show(name, name_type, content)
+        else:
+            print('"{}" is not found.'.format(name))

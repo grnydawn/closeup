@@ -40,7 +40,7 @@ def main(argv=None):
 
     sub_parser = sub_parsers.add_parser('show',
             help='show content of name')
-    sub_parser.add_argument('names', nargs='+', metavar='name',
+    sub_parser.add_argument('names', nargs='*', metavar='name',
             help='name(s) for objects', type=util.cmd_arg)
 #
 #    sub_parser = sub_parsers.add_parser('cat-file',

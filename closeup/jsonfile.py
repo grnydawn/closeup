@@ -40,6 +40,24 @@ class JSONFile(object):
                 pardict[curkey] = value
         _add(self.json[reg_type], name_path[0], list(name_path[1:]))
 
+    def get(self, namepath):
+        def _get(curdict, curpath):
+            # TODO: check if curdict is hashable
+            print ('XX', curpath, curdict)
+            try:
+                if len(curpath)>1:
+                    return _get(curdict[curpath[0]], curpath[1:])
+                elif len(curpath)==1:
+                    return curdict[curpath[0]]
+            except:
+                return None
+
+        for topname, topdict in self.json.items():
+            found = _get(topdict, namepath)
+            if found:
+                return found
+        return None
+
     def dump(self):
         with open(self.path, 'w') as f:
             json.dump(self.json, f)
@@ -57,6 +75,17 @@ class JSONFile(object):
 
     def __str__(self):
         return json.dumps(self.json, sort_keys=True)
+
+    def summary(self):
+        names = []
+        for jsontype, value in self.json.items():
+            if isinstance(value, dict):
+                names.extend(value.keys())
+            elif isinstance(value, list):
+                names.extend('[]*{:d}'.format(len(value)))
+            else:
+                names.append(str(value)[:20])
+        return ', '.join([str(name) for name in names])
 
 class Register(JSONFile):
     def __init__(self):
@@ -79,6 +108,28 @@ class Register(JSONFile):
         super(Register, self).add(reg_type, name_obj.path, value,
             create_if_notexist=True)
 
+    def get(self, name_obj):
+        value = super(Register, self).get(name_obj.path)
+        if value:
+            if self.ishashable(value):
+                if value[2]['reg_type']==util.path_type:
+                    if os.path.isdir(value[1]):
+                        return util.dirpath_type, value[1]
+                    elif os.path.isfile(value[1]):
+                        return util.filepath_type, open(value[1], 'r').read()
+                    else:
+                        return util.unknown_type, value[1]
+                elif value[2]['reg_type']==util.command_type:
+                    return util.command_type, util.runcmd(value[1])
+                elif value[2]['reg_type']==util.variable_type:
+                    return util.variable_type, os.getenv(value[1])
+                else:
+                    import pdb; pdb.set_trace()
+            else:
+                return util.nametree_type, value
+        else:
+            return None, None
+
 class Album(JSONFile):
     def __init__(self):
         super(Album, self).__init__(util.album_path,
@@ -87,6 +138,17 @@ class Album(JSONFile):
     def add(self, album_type, name_obj, value):
         super(Album, self).add(album_type, name_obj.path, value,
             create_if_notexist=True)
+
+    def get(self, name_obj):
+        value = super(Album, self).get(name_obj.path)
+        if value:
+            obj_type, data = filesys.read_object(value)
+            if obj_type=='image':
+                return obj_type, data.split('\n')
+            else:
+                return None, None
+        else:
+            return None, None
 
 def load_register():
     return Register()
