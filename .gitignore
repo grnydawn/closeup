@@ -105,3 +105,4 @@ closeupenv
 closeup.log
 *.swp
 venv
+closeup.old

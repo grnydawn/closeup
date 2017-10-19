@@ -1,6 +1,7 @@
 test:
+	cd tests && rm -f *.log
 	cd tests && python -m unittest test_commands
-	cd tests && python -m unittest test_structure
+#	cd tests && python -m unittest test_structure
 
 install:
 	python setup.py install --user --record installed_files.txt

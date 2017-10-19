@@ -1,25 +1,21 @@
 # -*- coding: UTF-8 -*-
-"""Implement closeup exceptions.
+"""Implement Closeup Exceptions.
 """
-from __future__ import absolute_import, division, print_function, unicode_literals
+
 
 class CloseupException(Exception):
     pass
 
-class CloseupNameError(CloseupException):
-    pass
+class NamePartNotExistError(CloseupException):
+    def __init__(self, part, name_obj):
+        m = '"{}" of "{}" is not found.'.format(part, name_obj)
+        self.part = part
+        self.name_obj = name_obj
+        super(CloseupException, self).__init__(m)
 
-class NameParserError(CloseupNameError):
-    pass
-
-class NameAlreadyExistError(CloseupNameError):
-    pass
-
-class NameNotFoundError(CloseupNameError):
-    pass
-
-class NameNotAListError(CloseupNameError):
-    pass
-
-class NameNotALinkError(CloseupNameError):
-    pass
+class NamePartTypeMismatchError(CloseupException):
+    def __init__(self, expected, actual):
+        m = 'type "{}" is expected but type "{}" is given.'.format(expected.__name__, actual.__name__)
+        self.expected = expected
+        self.actual = actual
+        super(CloseupException, self).__init__(m)
