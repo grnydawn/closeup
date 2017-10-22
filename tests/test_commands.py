@@ -38,11 +38,11 @@ class TestCommands(unittest.TestCase):
         closeup.main(argv=['register', 'b[0]/home', 'HOME', '-t', 'variable'])
         closeup.main(argv=['register', 'b[1]/date', 'date', '-t', 'command'])
 
-    def _test_snap(self):
+    def test_snap(self):
         self._test_register()
-        closeup.main(argv=['snap', 'image01'])
+        closeup.main(argv=['snap'])
 
-    def test_show(self):
+    def _test_show(self):
         self._test_snap()
         closeup.main(argv=['show'])
         closeup.main(argv=['show', 'image01'])

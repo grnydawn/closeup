@@ -2,46 +2,45 @@
 """Implement closeup command-line interface"""
 
 from __future__ import absolute_import, division, print_function, unicode_literals
-import os
 from argparse import ArgumentParser
-from . import commands, util
+from . import util, cmdinit, cmdregister, cmdsnap, cmdshow, error, system
 
 def main(argv=None):
-    """Entry to closeup
-    argv is mainly for testing.
-    """
+    """Entry to closeup"""
+
     parser = ArgumentParser()
     sub_parsers = parser.add_subparsers(dest='command', metavar='command')
     sub_parsers.required = True
 
     sub_parser = sub_parsers.add_parser('init',
             help='initialize a new repo')
-    sub_parser.add_argument('repo', type=util.cmd_arg,
+    sub_parser.add_argument('repo', type=util.to_unicodes,
             help='directory name for new repo')
 
     sub_parser = sub_parsers.add_parser('register',
             help='add method(s) to register')
-    sub_parser.add_argument('name', type=util.cmd_arg,
+    sub_parser.add_argument('name', type=util.to_unicodes,
             help='name for method')
-    sub_parser.add_argument('methods', nargs='+', metavar='method',
-            help='method(s) to register', type=util.cmd_arg)
-    sub_parser.add_argument('-t', choices=[util.path_type,
-            util.command_type, util.variable_type],
-            default=util.path_type, dest='type',
+    sub_parser.add_argument('targets', nargs='+', metavar='target',
+            type=util.to_unicodes,
+            help='target(s) to register')
+    sub_parser.add_argument('-t', default='path',
+            dest='type', type=util.to_unicodes,
             help='type of object (default %(default)r)')
 
     sub_parser = sub_parsers.add_parser('snap',
             help='record current state of the registered')
-    sub_parser.add_argument('name', type=util.cmd_arg,
+    sub_parser.add_argument('name', nargs='?', type=util.to_unicodes,
             help='name for image')
-    sub_parser.add_argument('-m', '--message',
-            default='captured at {}.'.format(util.datetimestr()),
+    sub_parser.add_argument('-m', '--message', default='none',
+            type=util.to_unicodes,
             help='text of commit message')
 
     sub_parser = sub_parsers.add_parser('show',
             help='show content of name')
     sub_parser.add_argument('names', nargs='*', metavar='name',
-            help='name(s) for objects', type=util.cmd_arg)
+            type=util.to_unicodes,
+            help='name(s) for objects')
 #
 #    sub_parser = sub_parsers.add_parser('cat-file',
 #            help='display contents of object')
@@ -88,7 +87,7 @@ def main(argv=None):
 
     args = parser.parse_args(args=argv)
 
-    util.setup_logging(default_path=os.path.join(os.path.dirname(__file__), 'logging.json'))
+    #util.setup_logging()
 
     # TODO: try except for handling common exception among commands
     process_commands(args)
@@ -99,13 +98,16 @@ def process_commands(args):
 
     # TODO: try except for handling specific exceptions for each commands
     if args.command == 'init':
-        commands.init(args.repo)
+        cmdinit.run(args.repo)
     elif args.command == 'register':
-        commands.register(args.name, args.methods, args.type)
+        try:
+            cmdregister.run(args.name, args.targets, args.type)
+        except error.NoRepoRootFound as err:
+            system.error_exit(str(err))
     elif args.command == 'show':
-        commands.show(args.names)
+        cmdshow.run(args.names)
     elif args.command == 'snap':
-        commands.snap(args.name, args.message)
+        cmdsnap.run(args.name, args.message)
 #    elif args.command == 'cat-file':
 #        try:
 #            commands.cat_file(args.mode, args.hash_prefix)
@@ -124,4 +126,4 @@ def process_commands(args):
 #    elif args.command == 'status':
 #        status()
     else:
-        print('ERROR: unexpected command {!r}'.format(args.command))
+        print('fatal: unexpected command {!r}'.format(args.command))
