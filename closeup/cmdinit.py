@@ -9,5 +9,5 @@ def run(repo):
     logger.debug('calling init("{}")'.format(repo))
     system.makedirs(cas.objects_path(repo))
     system.dump_jsonfile(cas.register_path(repo), {})
-    system.dump_jsonfile(cas.image_path(repo), {'head':'master'})
+    system.dump_jsonfile(cas.image_path(repo), {'HEAD':'master'})
     print('initialized empty repository: {}'.format(repo))

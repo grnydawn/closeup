@@ -38,29 +38,22 @@ class TestCommands(unittest.TestCase):
         closeup.main(argv=['register', 'b[0]/home', 'HOME', '-t', 'variable'])
         closeup.main(argv=['register', 'b[1]/date', 'date', '-t', 'command'])
 
-    def test_snap(self):
+    def _test_snap(self):
         self._test_register()
         closeup.main(argv=['snap'])
 
-    def _test_show(self):
+    def test_show(self):
         self._test_snap()
         closeup.main(argv=['show'])
-        closeup.main(argv=['show', 'image01'])
         closeup.main(argv=['show', 'b[1]/date'])
         closeup.main(argv=['show', 'b[0]/home'])
         closeup.main(argv=['show', 'a[2]/app1'])
         closeup.main(argv=['show', 'a[2]/app1/add.f90'])
+        closeup.main(argv=['show', 'HEAD'])
+        closeup.main(argv=['snap'])
+        closeup.main(argv=['show', 'HEAD'])
+        closeup.main(argv=['show', 'HEAD~1'])
 
-#        closeup.main(argv=['show', 'a[2]/app1'])
-#            output = out.getvalue().strip()
-#            self.assertTrue(output.find(prog)>0)
-#            closeup.main(argv=['show', 'a[1]/cpuinfo'])
-#            output = out.getvalue().strip()
-#            self.assertTrue(output.find('cpuinfo')>0)
-#            closeup.main(argv=['show', 'b[0]/home'])
-#            output = out.getvalue().strip()
-#            self.assertTrue(output.find('HOME')>0)
-#
 #    def test_record(self):
 #        self._test_register()
 #        closeup.main(argv=['record', 'rec1'])

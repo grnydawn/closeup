@@ -104,10 +104,11 @@ def process_commands(args):
             cmdregister.run(args.name, args.targets, args.type)
         except error.NoRepoRootFound as err:
             system.error_exit(str(err))
-    elif args.command == 'show':
-        cmdshow.run(args.names)
     elif args.command == 'snap':
         cmdsnap.run(args.name, args.message)
+    elif args.command == 'show':
+        cmdshow.run(args.names)
+
 #    elif args.command == 'cat-file':
 #        try:
 #            commands.cat_file(args.mode, args.hash_prefix)

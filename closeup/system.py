@@ -43,6 +43,9 @@ def abspath(path):
 def normpath(path):
     return os.path.normpath(path)
 
+def realpath(path):
+    return os.path.realpath(path)
+
 def pathexists(path):
     return os.path.exists(path)
 
@@ -52,8 +55,17 @@ def pathsplit(path):
 def dirname(path):
     return os.path.dirname(path)
 
+def basename(path):
+    return os.path.basename(path)
+
+def isfile(path):
+    return os.path.isfile(path)
+
 def getcwd():
     return os.getcwd()
+
+def listdir(path):
+    return os.listdir(path)
 
 def pathwalk(path, **kwargs):
     return os.walk(path, **kwargs)

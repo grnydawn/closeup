@@ -36,6 +36,18 @@ def parse(name):
             raise error.WrongNamePath(name, item)
     return namepath
 
+def get(top, name):
+    namepath = parse(name)
+    for idx, node in enumerate(namepath):
+        try:
+            top = top[node]
+        except TypeError as err:
+            raise error.PathTypeMismatch(top, namepath[:idx],
+                namepath[idx:])
+        except KeyError as err:
+            raise error.NamePathNotFound(namepath, node)
+    return top
+
 def set(top, name, value, overwrite=False):
     namepath = parse(name)
     if len(namepath)==0:
@@ -43,12 +55,12 @@ def set(top, name, value, overwrite=False):
     elif len(namepath)==1:
         if isinstance(namepath[0], int):
             if not isinstance(top, list):
-                error.PathTypeMismatch(list, type(top))
+                raise error.PathTypeMismatch(list, type(top))
             if len(top)<=namepath[0]:
                 top += [list() for _ in range(namepath[0]-len(top)+1)]
         else:
             if not isinstance(top, dict):
-                error.PathTypeMismatch(dict, type(top))
+                raise error.PathTypeMismatch(dict, type(top))
         if namepath[0] in top and not overwrite:
             raise error.NamePathExists(name, namepath[0])
         top[namepath[0]] = value
@@ -60,12 +72,12 @@ def set(top, name, value, overwrite=False):
                 ctype = dict
             if isinstance(parent, int):
                 if not isinstance(top, list):
-                    error.PathTypeMismatch(list, type(top))
+                    raise error.PathTypeMismatch(list, type(top))
                 if len(top)<=parent:
                     top += [ctype() for _ in range(parent-len(top)+1)]
             else:
                 if not isinstance(top, dict):
-                    error.PathTypeMismatch(dict, type(top))
+                    raise error.PathTypeMismatch(dict, type(top))
                 if parent not in top:
                     top[parent] = ctype()
             top = top[parent]
