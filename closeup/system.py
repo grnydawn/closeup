@@ -5,6 +5,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import os, subprocess, json, sys
 
 pathsep = os.sep
+CalledProcessError = subprocess.CalledProcessError
 
 def read_bytefile(path):
     with open(path, 'rb') as f:
@@ -23,7 +24,8 @@ def dump_jsonfile(path, data):
         f.write(json.dumps(data))
 
 def execute(cmd):
-    return subprocess.check_output(os.path.expandvars(cmd).split())
+    return subprocess.check_output(
+        os.path.expandvars(cmd).split(), shell=True)
 
 def mkdir(path, *mode):
     os.mkdir(path, *mode)
@@ -52,11 +54,17 @@ def pathexists(path):
 def pathsplit(path):
     return os.path.split(path)
 
+def splitext(path):
+    return os.path.splitext(path)
+
 def dirname(path):
     return os.path.dirname(path)
 
 def basename(path):
     return os.path.basename(path)
+
+def relpath(path, *start):
+    return os.path.relpath(path, *start)
 
 def isfile(path):
     return os.path.isfile(path)

@@ -21,7 +21,7 @@ def dump(cup, path, extra):
                     # TODO: choose one of them
                     fileext, filecup = exts[0]
                     return fileext.dump(filecup, objpath, remained)
-        return 'Can not dump {}:{} at file.'.format(path, extra)
+        return 'file: can not dump {}:{}.'.format(path, extra)
 
 def summary(cup, path, extra):
     fullpath = os.path.join(path, *extra)
@@ -32,7 +32,7 @@ def summary(cup, path, extra):
             fileext, filecup = exts[0]
             return fileext.summary(filecup, fullpath, [])
         else:
-            return(str(os.lstat(fullpath)))
+            return('{}'.format(subprocess.check_output(["ls", fullpath, "-lrt"]).strip()))
     else:
         for idx in reversed(range(len(extra))):
             objpath = os.path.join(path, *extra[:idx+1])
@@ -43,4 +43,4 @@ def summary(cup, path, extra):
                     # TODO: choose one of them
                     fileext, filecup = exts[0]
                     return fileext.summary(filecup, objpath, remained)
-        return 'Can not summary {}:{} at file.'.format(path, extra)
+        return '{}{}'.format(os.sep, os.sep.join(extra))

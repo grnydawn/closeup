@@ -8,7 +8,7 @@ from . import extension as ext, util, system, misc, cas, namespace as ns
 def checker(node):
     return misc.is_reglink(node)
 
-def run(name, msg):
+def run(name, msg, exclude=[]):
     """Snap an image"""
     cwd = system.getcwd()
     repo = misc.get_reporoot(cwd)
@@ -17,7 +17,10 @@ def run(name, msg):
     for node in ns.traverse(register, check=checker):
         objtype = node[1]
         content = node[2]
-        node[3] = ext.dump(repo, objtype, content)
+        if objtype not in exclude:
+            objhash = ext.dump(repo, objtype, content)
+            if objhash:
+                node[3] = objhash
     system.dump_jsonfile(regpath, register)
     reghash = cas.hash_object(repo, system.read_bytefile(
         regpath), 'register')
@@ -38,3 +41,4 @@ def run(name, msg):
     else:
         image[branch] = '{}:{}'.format(sha1,tag)
     system.dump_jsonfile(imgpath, image)
+    return sha1

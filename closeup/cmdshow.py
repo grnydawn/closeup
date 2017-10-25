@@ -2,7 +2,7 @@
 """Implement sub commands."""
 
 from __future__ import absolute_import, division, print_function, unicode_literals
-from . import system, misc, cas, namespace as ns, error, extension as ext
+from . import system, misc, cas, namespace as ns, error, extension as ext, util
 
 def run(names):
     cwd = system.getcwd()
@@ -13,14 +13,21 @@ def run(names):
     image = system.load_jsonfile(imgpath)
     if names:
         for name in names:
-            #print('summary of "{}":'.format(name))
+            if not name: continue
             try:
                 regvalue = ns.get(register, name)
                 if misc.is_reglink(regvalue):
-                    summary = ext.summary(repo, regvalue[1], regvalue[2])
-                    print(summary)
+                    print('{}:"{}"'.format(regvalue[1], regvalue[2]))
                 else:
-                    print(regvalue)
+                    if isinstance(regvalue, list):
+                        if len(regvalue)>5:
+                            print('[0], [1], ..., [{}]'.format(len(regvalue)-1))
+                        else:
+                            print(', '.join(['[{:d}]'.format(i) for i in range(len(regvalue))]))
+                    elif isinstance(regvalue, dict):
+                        print(' '.join([system.pathsep+k for k in regvalue.keys()]))
+                    else:
+                        print(regvalue)
                 continue
             except error.PathTypeMismatch as err:
                 if misc.is_reglink(err.node):
@@ -29,7 +36,7 @@ def run(names):
                     print(summary)
                     continue
                 else:
-                    raise
+                    system.error_exit('"{}" is not found.'.format(name))
             except error.NamePathNotFound as err:
                 pass
 
@@ -48,16 +55,15 @@ def run(names):
                             anc -= 1
                     objtype, data = cas.read_object(repo, sha1)
                     if objtype=='image':
-                        print(objtype, data)
+                        print(util.to_unicodes(data))
                     continue
-                elif not rem:
-                    print('CC')
-                    import pdb; pdb.set_trace()
+                else:
+                    system.error_exit('"{}" is not found.'.format(name))
             except error.NamePathNotFound as err:
                 continue
             system.error_exit('"{}" is not found.'.format(name))
     else:
-        print('register top names: {}'.format(', '.join(register.keys())))
-        print('current branch: {}'.format(image['HEAD']))
+        print(' '.join([system.pathsep+k for k in register.keys()]))
+        #print(('{} '.format(system.pathsep)).join( register.keys()))
     #import pdb; pdb.set_trace()
 

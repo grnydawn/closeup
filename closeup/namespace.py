@@ -48,6 +48,10 @@ def get(top, name):
             raise error.NamePathNotFound(namepath, node)
     return top
 
+def append(top, name, value):
+    node = get(top, name)
+    import pdb; pdb.set_trace()
+
 def set(top, name, value, overwrite=False):
     namepath = parse(name)
     if len(namepath)==0:

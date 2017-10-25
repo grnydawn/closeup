@@ -7,5 +7,8 @@ build:
 run: build
 	./add.exe
 
+test:
+	./add.exe > test.out
+		
 clean:
-	rm -f add.exe *.o *.mod
+	rm -f add.exe *.o *.mod, test.out

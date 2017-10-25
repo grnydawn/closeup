@@ -18,5 +18,5 @@ def run(regname, targets, regtype):
     else:
         namespace.set(register, regname, regitems)
     system.dump_jsonfile(regpath, register)
-    print('registered: {}'.format(', '.join(targets)))
+    print('{}:"{}" is registered successfully.'.format(regtype, ', '.join(targets)))
 

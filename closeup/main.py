@@ -3,7 +3,7 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 from argparse import ArgumentParser
-from . import util, cmdinit, cmdregister, cmdsnap, cmdshow, error, system
+from . import util, cmdinit, cmdregister, cmdsnap, cmdshow, error, system, cmdrecord
 
 def main(argv=None):
     """Entry to closeup"""
@@ -41,6 +41,15 @@ def main(argv=None):
     sub_parser.add_argument('names', nargs='*', metavar='name',
             type=util.to_unicodes,
             help='name(s) for objects')
+
+    sub_parser = sub_parsers.add_parser('record',
+            help='record a series of states of the registered')
+    sub_parser.add_argument('name', type=util.to_unicodes,
+            help='name for record')
+    sub_parser.add_argument('-m', '--message', default='none',
+            type=util.to_unicodes,
+            help='text of commit message')
+
 #
 #    sub_parser = sub_parsers.add_parser('cat-file',
 #            help='display contents of object')
@@ -106,6 +115,8 @@ def process_commands(args):
             system.error_exit(str(err))
     elif args.command == 'snap':
         cmdsnap.run(args.name, args.message)
+    elif args.command == 'record':
+        cmdrecord.run(args.name, args.message)
     elif args.command == 'show':
         cmdshow.run(args.names)
 
