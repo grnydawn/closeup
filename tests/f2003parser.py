@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from parsimonious.grammar import Grammar
+from parsimonious.nodes import NodeVisitor
 
 grammar = Grammar(
     r"""
@@ -365,7 +366,8 @@ grammar = Grammar(
         _0                      = ~"[ \t]*"
         _1                      = ~"[ \t]+"
         _C                      = _0 "!" ~"[^\n\r]*" EOL
-        _L                      = ~"[^\n\r]*" EOL
+        #_L                      = ~"[^\n\r]*" EOL
+        _L                      = _0 EOL
         EOL                     = ~"[\r\n]+"
         blank_line              = ~"[ \t]*[\r\n]"
         # F77 supports through modified _C in every stmts?
@@ -376,13 +378,16 @@ grammar = Grammar(
 #        bold_open  = "(("
 #        bold_close = "))"
 
+class F2003Visitor(NodeVisitor):
+    def generic_visit(self, node, visited_children):
+        #import pdb; pdb.set_trace()
+        if node.expr_name:
+            print(node.expr_name, '---{}---'.format(node.text))
+
 import sys
 #import pdb; pdb.set_trace()
 sys.setrecursionlimit(1000)
 tree = grammar.parse(open('./add.f90', 'r').read())
-print(tree)
-
-def parse(cup, content, extra):
-    #import pdb; pdb.set_trace()
-    tree = grammar.parse(content)
+F2003Visitor().visit(tree)
+#print(tree)
 
