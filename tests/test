@@ -1,0 +1,1083 @@
+> /home/youngsung/repos/github/closeup/tests/fp.py(302)<module>()
+-> sys.setrecursionlimit(1000)
+(Pdb) (Pdb) --KeyboardInterrupt--
+(Pdb) <Node called "program" matching "        program main
+            implicit none
+            integer :: a, b, c
+
+            do a = 1, 3
+                do b = 1, 3
+                    c = myadd(a, b)
+                    print *, a, b, c
+                end do
+            end do
+
+        contains
+
+            function myadd(d, e) result(f)
+                implicit none
+                integer, intent(in) :: d, e
+                integer :: f
+
+
+                f = d + e
+
+            end function
+
+        end program
+">
+    <Node called "program_unit" matching "        program main
+                implicit none
+                integer :: a, b, c
+    
+                do a = 1, 3
+                    do b = 1, 3
+                        c = myadd(a, b)
+                        print *, a, b, c
+                    end do
+                end do
+    
+            contains
+    
+                function myadd(d, e) result(f)
+                    implicit none
+                    integer, intent(in) :: d, e
+                    integer :: f
+    
+    
+                    f = d + e
+    
+                end function
+    
+            end program
+    ">
+        <Node called "main_program" matching "        program main
+                    implicit none
+                    integer :: a, b, c
+        
+                    do a = 1, 3
+                        do b = 1, 3
+                            c = myadd(a, b)
+                            print *, a, b, c
+                        end do
+                    end do
+        
+                contains
+        
+                    function myadd(d, e) result(f)
+                        implicit none
+                        integer, intent(in) :: d, e
+                        integer :: f
+        
+        
+                        f = d + e
+        
+                    end function
+        
+                end program
+        ">
+            <Node matching "        program main
+            ">
+                <Node called "program_stmt" matching "        program main
+                ">
+                    <RegexNode called "_0" matching "        ">
+                    <RegexNode matching "program">
+                    <RegexNode called "_1" matching " ">
+                    <RegexNode called "name" matching "main">
+                    <RegexNode called "_0" matching "">
+                    <RegexNode called "EOL" matching "
+                    ">
+            <Node matching "            implicit none
+                        integer :: a, b, c
+            
+            ">
+                <Node called "specification_part" matching "            implicit none
+                            integer :: a, b, c
+                
+                ">
+                    <Node matching "">
+                    <Node matching "">
+                    <Node matching "            implicit none
+                    ">
+                        <Node called "implicit_part" matching "            implicit none
+                        ">
+                            <Node called "implicit_stmt" matching "            implicit none
+                            ">
+                                <Node matching "            implicit none
+                                ">
+                                    <RegexNode called "_0" matching "            ">
+                                    <RegexNode matching "implicit">
+                                    <RegexNode called "_1" matching " ">
+                                    <RegexNode matching "none">
+                                    <RegexNode called "_0" matching "">
+                                    <RegexNode called "EOL" matching "
+                                    ">
+                    <Node matching "            integer :: a, b, c
+                    
+                    ">
+                        <Node called "declaration_construct" matching "            integer :: a, b, c
+                        
+                        ">
+                            <Node called "type_declaration_stmt" matching "            integer :: a, b, c
+                            
+                            ">
+                                <RegexNode called "_0" matching "            ">
+                                <Node called "declaration_type_spec" matching "integer ">
+                                    <Node called "intrinsic_type_spec" matching "integer ">
+                                        <Node matching "integer ">
+                                            <RegexNode matching "integer">
+                                            <RegexNode called "_0" matching " ">
+                                            <Node matching "">
+                                <Node matching "::">
+                                    <Node matching "::">
+                                        <Node matching "">
+                                        <RegexNode called "_0" matching "">
+                                        <Node matching "::">
+                                <RegexNode called "_0" matching " ">
+                                <Node called "entity_decl_list" matching "a, b, c">
+                                    <Node called "entity_decl" matching "a">
+                                        <Node matching "a">
+                                            <RegexNode called "name" matching "a">
+                                            <Node matching "">
+                                            <Node matching "">
+                                            <RegexNode called "_0" matching "">
+                                            <Node matching "">
+                                    <Node matching ", b, c">
+                                        <Node matching ", b">
+                                            <RegexNode called "_0" matching "">
+                                            <Node matching ",">
+                                            <RegexNode called "_0" matching " ">
+                                            <Node called "entity_decl" matching "b">
+                                                <Node matching "b">
+                                                    <RegexNode called "name" matching "b">
+                                                    <Node matching "">
+                                                    <Node matching "">
+                                                    <RegexNode called "_0" matching "">
+                                                    <Node matching "">
+                                        <Node matching ", c">
+                                            <RegexNode called "_0" matching "">
+                                            <Node matching ",">
+                                            <RegexNode called "_0" matching " ">
+                                            <Node called "entity_decl" matching "c">
+                                                <Node matching "c">
+                                                    <RegexNode called "name" matching "c">
+                                                    <Node matching "">
+                                                    <Node matching "">
+                                                    <RegexNode called "_0" matching "">
+                                                    <Node matching "">
+                                <RegexNode called "_0" matching "">
+                                <RegexNode called "EOL" matching "
+                                
+                                ">
+            <Node matching "            do a = 1, 3
+                            do b = 1, 3
+                                c = myadd(a, b)
+                                print *, a, b, c
+                            end do
+                        end do
+            
+            ">
+                <Node called "execution_part" matching "            do a = 1, 3
+                                do b = 1, 3
+                                    c = myadd(a, b)
+                                    print *, a, b, c
+                                end do
+                            end do
+                
+                ">
+                    <Node called "executable_construct" matching "            do a = 1, 3
+                                    do b = 1, 3
+                                        c = myadd(a, b)
+                                        print *, a, b, c
+                                    end do
+                                end do
+                    
+                    ">
+                        <Node called "do_construct" matching "            do a = 1, 3
+                                        do b = 1, 3
+                                            c = myadd(a, b)
+                                            print *, a, b, c
+                                        end do
+                                    end do
+                        
+                        ">
+                            <Node called "block_do_construct" matching "            do a = 1, 3
+                                            do b = 1, 3
+                                                c = myadd(a, b)
+                                                print *, a, b, c
+                                            end do
+                                        end do
+                            
+                            ">
+                                <Node called "do_stmt" matching "            do a = 1, 3
+                                ">
+                                    <Node called "nonlabel_do_stmt" matching "            do a = 1, 3
+                                    ">
+                                        <Node matching "">
+                                        <RegexNode called "_0" matching "            ">
+                                        <RegexNode matching "do">
+                                        <RegexNode called "_0" matching " ">
+                                        <Node matching "a = 1, 3">
+                                            <Node called "loop_control" matching "a = 1, 3">
+                                                <Node matching "a = 1, 3">
+                                                    <Node matching "">
+                                                    <RegexNode called "_0" matching "">
+                                                    <Node called "designator" matching "a">
+                                                        <Node called "array_section" matching "a">
+                                                            <Node called "data_ref" matching "a">
+                                                                <Node called "part_ref" matching "a">
+                                                                    <RegexNode called "name" matching "a">
+                                                                    <Node matching "">
+                                                                <Node matching "">
+                                                            <Node matching "">
+                                                    <RegexNode called "_0" matching " ">
+                                                    <Node matching "=">
+                                                    <RegexNode called "_0" matching " ">
+                                                    <Node called "expr" matching "1">
+                                                        <Node matching "">
+                                                        <RegexNode called "_0" matching "">
+                                                        <Node called "level_5_expr" matching "1">
+                                                            <Node matching "">
+                                                            <RegexNode called "_0" matching "">
+                                                            <Node called "equiv_operand" matching "1">
+                                                                <Node matching "">
+                                                                <RegexNode called "_0" matching "">
+                                                                <Node called "or_operand" matching "1">
+                                                                    <Node matching "">
+                                                                    <RegexNode called "_0" matching "">
+                                                                    <Node called "and_operand" matching "1">
+                                                                        <Node matching "">
+                                                                        <RegexNode called "_0" matching "">
+                                                                        <Node called "level_4_expr" matching "1">
+                                                                            <Node matching "">
+                                                                            <RegexNode called "_0" matching "">
+                                                                            <Node called "level_3_expr" matching "1">
+                                                                                <Node matching "">
+                                                                                <RegexNode called "_0" matching "">
+                                                                                <Node called "level_2_expr" matching "1">
+                                                                                    <Node matching "">
+                                                                                    <RegexNode called "_0" matching "">
+                                                                                    <Node called "add_operand" matching "1">
+                                                                                        <Node matching "">
+                                                                                        <RegexNode called "_0" matching "">
+                                                                                        <Node called "mult_operand" matching "1">
+                                                                                            <Node called "level_1_expr" matching "1">
+                                                                                                <Node matching "">
+                                                                                                <RegexNode called "_0" matching "">
+                                                                                                <Node called "primary" matching "1">
+                                                                                                    <Node called "constant" matching "1">
+                                                                                                        <Node called "literal_constant" matching "1">
+                                                                                                            <Node called "int_literal_constant" matching "1">
+                                                                                                                <RegexNode called "digit_string" matching "1">
+                                                                                                                <Node matching "">
+                                                                                            <Node matching "">
+                                                    <RegexNode called "_0" matching "">
+                                                    <Node matching ",">
+                                                    <RegexNode called "_0" matching " ">
+                                                    <Node called "expr" matching "3">
+                                                        <Node matching "">
+                                                        <RegexNode called "_0" matching "">
+                                                        <Node called "level_5_expr" matching "3">
+                                                            <Node matching "">
+                                                            <RegexNode called "_0" matching "">
+                                                            <Node called "equiv_operand" matching "3">
+                                                                <Node matching "">
+                                                                <RegexNode called "_0" matching "">
+                                                                <Node called "or_operand" matching "3">
+                                                                    <Node matching "">
+                                                                    <RegexNode called "_0" matching "">
+                                                                    <Node called "and_operand" matching "3">
+                                                                        <Node matching "">
+                                                                        <RegexNode called "_0" matching "">
+                                                                        <Node called "level_4_expr" matching "3">
+                                                                            <Node matching "">
+                                                                            <RegexNode called "_0" matching "">
+                                                                            <Node called "level_3_expr" matching "3">
+                                                                                <Node matching "">
+                                                                                <RegexNode called "_0" matching "">
+                                                                                <Node called "level_2_expr" matching "3">
+                                                                                    <Node matching "">
+                                                                                    <RegexNode called "_0" matching "">
+                                                                                    <Node called "add_operand" matching "3">
+                                                                                        <Node matching "">
+                                                                                        <RegexNode called "_0" matching "">
+                                                                                        <Node called "mult_operand" matching "3">
+                                                                                            <Node called "level_1_expr" matching "3">
+                                                                                                <Node matching "">
+                                                                                                <RegexNode called "_0" matching "">
+                                                                                                <Node called "primary" matching "3">
+                                                                                                    <Node called "constant" matching "3">
+                                                                                                        <Node called "literal_constant" matching "3">
+                                                                                                            <Node called "int_literal_constant" matching "3">
+                                                                                                                <RegexNode called "digit_string" matching "3">
+                                                                                                                <Node matching "">
+                                                                                            <Node matching "">
+                                                    <Node matching "">
+                                        <RegexNode called "_0" matching "">
+                                        <RegexNode called "EOL" matching "
+                                        ">
+                                <Node called "block" matching "                do b = 1, 3
+                                                    c = myadd(a, b)
+                                                    print *, a, b, c
+                                                end do
+                                ">
+                                    <Node called "execution_part_construct" matching "                do b = 1, 3
+                                                        c = myadd(a, b)
+                                                        print *, a, b, c
+                                                    end do
+                                    ">
+                                        <Node called "executable_construct" matching "                do b = 1, 3
+                                                            c = myadd(a, b)
+                                                            print *, a, b, c
+                                                        end do
+                                        ">
+                                            <Node called "do_construct" matching "                do b = 1, 3
+                                                                c = myadd(a, b)
+                                                                print *, a, b, c
+                                                            end do
+                                            ">
+                                                <Node called "block_do_construct" matching "                do b = 1, 3
+                                                                    c = myadd(a, b)
+                                                                    print *, a, b, c
+                                                                end do
+                                                ">
+                                                    <Node called "do_stmt" matching "                do b = 1, 3
+                                                    ">
+                                                        <Node called "nonlabel_do_stmt" matching "                do b = 1, 3
+                                                        ">
+                                                            <Node matching "">
+                                                            <RegexNode called "_0" matching "                ">
+                                                            <RegexNode matching "do">
+                                                            <RegexNode called "_0" matching " ">
+                                                            <Node matching "b = 1, 3">
+                                                                <Node called "loop_control" matching "b = 1, 3">
+                                                                    <Node matching "b = 1, 3">
+                                                                        <Node matching "">
+                                                                        <RegexNode called "_0" matching "">
+                                                                        <Node called "designator" matching "b">
+                                                                            <Node called "array_section" matching "b">
+                                                                                <Node called "data_ref" matching "b">
+                                                                                    <Node called "part_ref" matching "b">
+                                                                                        <RegexNode called "name" matching "b">
+                                                                                        <Node matching "">
+                                                                                    <Node matching "">
+                                                                                <Node matching "">
+                                                                        <RegexNode called "_0" matching " ">
+                                                                        <Node matching "=">
+                                                                        <RegexNode called "_0" matching " ">
+                                                                        <Node called "expr" matching "1">
+                                                                            <Node matching "">
+                                                                            <RegexNode called "_0" matching "">
+                                                                            <Node called "level_5_expr" matching "1">
+                                                                                <Node matching "">
+                                                                                <RegexNode called "_0" matching "">
+                                                                                <Node called "equiv_operand" matching "1">
+                                                                                    <Node matching "">
+                                                                                    <RegexNode called "_0" matching "">
+                                                                                    <Node called "or_operand" matching "1">
+                                                                                        <Node matching "">
+                                                                                        <RegexNode called "_0" matching "">
+                                                                                        <Node called "and_operand" matching "1">
+                                                                                            <Node matching "">
+                                                                                            <RegexNode called "_0" matching "">
+                                                                                            <Node called "level_4_expr" matching "1">
+                                                                                                <Node matching "">
+                                                                                                <RegexNode called "_0" matching "">
+                                                                                                <Node called "level_3_expr" matching "1">
+                                                                                                    <Node matching "">
+                                                                                                    <RegexNode called "_0" matching "">
+                                                                                                    <Node called "level_2_expr" matching "1">
+                                                                                                        <Node matching "">
+                                                                                                        <RegexNode called "_0" matching "">
+                                                                                                        <Node called "add_operand" matching "1">
+                                                                                                            <Node matching "">
+                                                                                                            <RegexNode called "_0" matching "">
+                                                                                                            <Node called "mult_operand" matching "1">
+                                                                                                                <Node called "level_1_expr" matching "1">
+                                                                                                                    <Node matching "">
+                                                                                                                    <RegexNode called "_0" matching "">
+                                                                                                                    <Node called "primary" matching "1">
+                                                                                                                        <Node called "constant" matching "1">
+                                                                                                                            <Node called "literal_constant" matching "1">
+                                                                                                                                <Node called "int_literal_constant" matching "1">
+                                                                                                                                    <RegexNode called "digit_string" matching "1">
+                                                                                                                                    <Node matching "">
+                                                                                                                <Node matching "">
+                                                                        <RegexNode called "_0" matching "">
+                                                                        <Node matching ",">
+                                                                        <RegexNode called "_0" matching " ">
+                                                                        <Node called "expr" matching "3">
+                                                                            <Node matching "">
+                                                                            <RegexNode called "_0" matching "">
+                                                                            <Node called "level_5_expr" matching "3">
+                                                                                <Node matching "">
+                                                                                <RegexNode called "_0" matching "">
+                                                                                <Node called "equiv_operand" matching "3">
+                                                                                    <Node matching "">
+                                                                                    <RegexNode called "_0" matching "">
+                                                                                    <Node called "or_operand" matching "3">
+                                                                                        <Node matching "">
+                                                                                        <RegexNode called "_0" matching "">
+                                                                                        <Node called "and_operand" matching "3">
+                                                                                            <Node matching "">
+                                                                                            <RegexNode called "_0" matching "">
+                                                                                            <Node called "level_4_expr" matching "3">
+                                                                                                <Node matching "">
+                                                                                                <RegexNode called "_0" matching "">
+                                                                                                <Node called "level_3_expr" matching "3">
+                                                                                                    <Node matching "">
+                                                                                                    <RegexNode called "_0" matching "">
+                                                                                                    <Node called "level_2_expr" matching "3">
+                                                                                                        <Node matching "">
+                                                                                                        <RegexNode called "_0" matching "">
+                                                                                                        <Node called "add_operand" matching "3">
+                                                                                                            <Node matching "">
+                                                                                                            <RegexNode called "_0" matching "">
+                                                                                                            <Node called "mult_operand" matching "3">
+                                                                                                                <Node called "level_1_expr" matching "3">
+                                                                                                                    <Node matching "">
+                                                                                                                    <RegexNode called "_0" matching "">
+                                                                                                                    <Node called "primary" matching "3">
+                                                                                                                        <Node called "constant" matching "3">
+                                                                                                                            <Node called "literal_constant" matching "3">
+                                                                                                                                <Node called "int_literal_constant" matching "3">
+                                                                                                                                    <RegexNode called "digit_string" matching "3">
+                                                                                                                                    <Node matching "">
+                                                                                                                <Node matching "">
+                                                                        <Node matching "">
+                                                            <RegexNode called "_0" matching "">
+                                                            <RegexNode called "EOL" matching "
+                                                            ">
+                                                    <Node called "block" matching "                    c = myadd(a, b)
+                                                                        print *, a, b, c
+                                                    ">
+                                                        <Node called "execution_part_construct" matching "                    c = myadd(a, b)
+                                                        ">
+                                                            <Node called "executable_construct" matching "                    c = myadd(a, b)
+                                                            ">
+                                                                <Node called "action_stmt" matching "                    c = myadd(a, b)
+                                                                ">
+                                                                    <Node called "assignment_stmt" matching "                    c = myadd(a, b)
+                                                                    ">
+                                                                        <RegexNode called "_0" matching "                    ">
+                                                                        <Node called "designator" matching "c">
+                                                                            <Node called "array_section" matching "c">
+                                                                                <Node called "data_ref" matching "c">
+                                                                                    <Node called "part_ref" matching "c">
+                                                                                        <RegexNode called "name" matching "c">
+                                                                                        <Node matching "">
+                                                                                    <Node matching "">
+                                                                                <Node matching "">
+                                                                        <RegexNode called "_0" matching " ">
+                                                                        <Node matching "=">
+                                                                        <RegexNode called "_0" matching " ">
+                                                                        <Node called "expr" matching "myadd(a, b)">
+                                                                            <Node matching "">
+                                                                            <RegexNode called "_0" matching "">
+                                                                            <Node called "level_5_expr" matching "myadd(a, b)">
+                                                                                <Node matching "">
+                                                                                <RegexNode called "_0" matching "">
+                                                                                <Node called "equiv_operand" matching "myadd(a, b)">
+                                                                                    <Node matching "">
+                                                                                    <RegexNode called "_0" matching "">
+                                                                                    <Node called "or_operand" matching "myadd(a, b)">
+                                                                                        <Node matching "">
+                                                                                        <RegexNode called "_0" matching "">
+                                                                                        <Node called "and_operand" matching "myadd(a, b)">
+                                                                                            <Node matching "">
+                                                                                            <RegexNode called "_0" matching "">
+                                                                                            <Node called "level_4_expr" matching "myadd(a, b)">
+                                                                                                <Node matching "">
+                                                                                                <RegexNode called "_0" matching "">
+                                                                                                <Node called "level_3_expr" matching "myadd(a, b)">
+                                                                                                    <Node matching "">
+                                                                                                    <RegexNode called "_0" matching "">
+                                                                                                    <Node called "level_2_expr" matching "myadd(a, b)">
+                                                                                                        <Node matching "">
+                                                                                                        <RegexNode called "_0" matching "">
+                                                                                                        <Node called "add_operand" matching "myadd(a, b)">
+                                                                                                            <Node matching "">
+                                                                                                            <RegexNode called "_0" matching "">
+                                                                                                            <Node called "mult_operand" matching "myadd(a, b)">
+                                                                                                                <Node called "level_1_expr" matching "myadd(a, b)">
+                                                                                                                    <Node matching "">
+                                                                                                                    <RegexNode called "_0" matching "">
+                                                                                                                    <Node called "primary" matching "myadd(a, b)">
+                                                                                                                        <Node called "function_reference" matching "myadd(a, b)">
+                                                                                                                            <Node called "procedure_designator" matching "myadd">
+                                                                                                                                <RegexNode called "name" matching "myadd">
+                                                                                                                            <RegexNode called "_0" matching "">
+                                                                                                                            <Node matching "(">
+                                                                                                                            <RegexNode called "_0" matching "">
+                                                                                                                            <Node matching "a, b">
+                                                                                                                                <Node called "actual_arg_spec_list" matching "a, b">
+                                                                                                                                    <Node called "actual_arg_spec" matching "a">
+                                                                                                                                        <Node matching "">
+                                                                                                                                        <RegexNode called "_0" matching "">
+                                                                                                                                        <Node called "actual_arg" matching "a">
+                                                                                                                                            <Node called "designator" matching "a">
+                                                                                                                                                <Node called "array_section" matching "a">
+                                                                                                                                                    <Node called "data_ref" matching "a">
+                                                                                                                                                        <Node called "part_ref" matching "a">
+                                                                                                                                                            <RegexNode called "name" matching "a">
+                                                                                                                                                            <Node matching "">
+                                                                                                                                                        <Node matching "">
+                                                                                                                                                    <Node matching "">
+                                                                                                                                    <Node matching ", b">
+                                                                                                                                        <Node matching ", b">
+                                                                                                                                            <RegexNode called "_0" matching "">
+                                                                                                                                            <Node matching ",">
+                                                                                                                                            <RegexNode called "_0" matching " ">
+                                                                                                                                            <Node called "actual_arg_spec" matching "b">
+                                                                                                                                                <Node matching "">
+                                                                                                                                                <RegexNode called "_0" matching "">
+                                                                                                                                                <Node called "actual_arg" matching "b">
+                                                                                                                                                    <Node called "designator" matching "b">
+                                                                                                                                                        <Node called "array_section" matching "b">
+                                                                                                                                                            <Node called "data_ref" matching "b">
+                                                                                                                                                                <Node called "part_ref" matching "b">
+                                                                                                                                                                    <RegexNode called "name" matching "b">
+                                                                                                                                                                    <Node matching "">
+                                                                                                                                                                <Node matching "">
+                                                                                                                                                            <Node matching "">
+                                                                                                                            <RegexNode called "_0" matching "">
+                                                                                                                            <Node matching ")">
+                                                                                                                <Node matching "">
+                                                                        <RegexNode called "_0" matching "">
+                                                                        <RegexNode called "EOL" matching "
+                                                                        ">
+                                                        <Node called "execution_part_construct" matching "                    print *, a, b, c
+                                                        ">
+                                                            <Node called "executable_construct" matching "                    print *, a, b, c
+                                                            ">
+                                                                <Node called "action_stmt" matching "                    print *, a, b, c
+                                                                ">
+                                                                    <Node called "print_stmt" matching "                    print *, a, b, c
+                                                                    ">
+                                                                        <RegexNode called "_0" matching "                    ">
+                                                                        <RegexNode matching "print">
+                                                                        <RegexNode called "_1" matching " ">
+                                                                        <Node called "format" matching "*">
+                                                                            <Node matching "*">
+                                                                        <Node matching ", a, b, c">
+                                                                            <Node matching ", a, b, c">
+                                                                                <RegexNode called "_0" matching "">
+                                                                                <Node matching ",">
+                                                                                <RegexNode called "_0" matching " ">
+                                                                                <Node called "output_item_list" matching "a, b, c">
+                                                                                    <Node called "output_item" matching "a">
+                                                                                        <Node called "expr" matching "a">
+                                                                                            <Node matching "">
+                                                                                            <RegexNode called "_0" matching "">
+                                                                                            <Node called "level_5_expr" matching "a">
+                                                                                                <Node matching "">
+                                                                                                <RegexNode called "_0" matching "">
+                                                                                                <Node called "equiv_operand" matching "a">
+                                                                                                    <Node matching "">
+                                                                                                    <RegexNode called "_0" matching "">
+                                                                                                    <Node called "or_operand" matching "a">
+                                                                                                        <Node matching "">
+                                                                                                        <RegexNode called "_0" matching "">
+                                                                                                        <Node called "and_operand" matching "a">
+                                                                                                            <Node matching "">
+                                                                                                            <RegexNode called "_0" matching "">
+                                                                                                            <Node called "level_4_expr" matching "a">
+                                                                                                                <Node matching "">
+                                                                                                                <RegexNode called "_0" matching "">
+                                                                                                                <Node called "level_3_expr" matching "a">
+                                                                                                                    <Node matching "">
+                                                                                                                    <RegexNode called "_0" matching "">
+                                                                                                                    <Node called "level_2_expr" matching "a">
+                                                                                                                        <Node matching "">
+                                                                                                                        <RegexNode called "_0" matching "">
+                                                                                                                        <Node called "add_operand" matching "a">
+                                                                                                                            <Node matching "">
+                                                                                                                            <RegexNode called "_0" matching "">
+                                                                                                                            <Node called "mult_operand" matching "a">
+                                                                                                                                <Node called "level_1_expr" matching "a">
+                                                                                                                                    <Node matching "">
+                                                                                                                                    <RegexNode called "_0" matching "">
+                                                                                                                                    <Node called "primary" matching "a">
+                                                                                                                                        <Node called "designator" matching "a">
+                                                                                                                                            <Node called "array_section" matching "a">
+                                                                                                                                                <Node called "data_ref" matching "a">
+                                                                                                                                                    <Node called "part_ref" matching "a">
+                                                                                                                                                        <RegexNode called "name" matching "a">
+                                                                                                                                                        <Node matching "">
+                                                                                                                                                    <Node matching "">
+                                                                                                                                                <Node matching "">
+                                                                                                                                <Node matching "">
+                                                                                    <Node matching ", b, c">
+                                                                                        <Node matching ", b">
+                                                                                            <RegexNode called "_0" matching "">
+                                                                                            <Node matching ",">
+                                                                                            <RegexNode called "_0" matching " ">
+                                                                                            <Node called "output_item" matching "b">
+                                                                                                <Node called "expr" matching "b">
+                                                                                                    <Node matching "">
+                                                                                                    <RegexNode called "_0" matching "">
+                                                                                                    <Node called "level_5_expr" matching "b">
+                                                                                                        <Node matching "">
+                                                                                                        <RegexNode called "_0" matching "">
+                                                                                                        <Node called "equiv_operand" matching "b">
+                                                                                                            <Node matching "">
+                                                                                                            <RegexNode called "_0" matching "">
+                                                                                                            <Node called "or_operand" matching "b">
+                                                                                                                <Node matching "">
+                                                                                                                <RegexNode called "_0" matching "">
+                                                                                                                <Node called "and_operand" matching "b">
+                                                                                                                    <Node matching "">
+                                                                                                                    <RegexNode called "_0" matching "">
+                                                                                                                    <Node called "level_4_expr" matching "b">
+                                                                                                                        <Node matching "">
+                                                                                                                        <RegexNode called "_0" matching "">
+                                                                                                                        <Node called "level_3_expr" matching "b">
+                                                                                                                            <Node matching "">
+                                                                                                                            <RegexNode called "_0" matching "">
+                                                                                                                            <Node called "level_2_expr" matching "b">
+                                                                                                                                <Node matching "">
+                                                                                                                                <RegexNode called "_0" matching "">
+                                                                                                                                <Node called "add_operand" matching "b">
+                                                                                                                                    <Node matching "">
+                                                                                                                                    <RegexNode called "_0" matching "">
+                                                                                                                                    <Node called "mult_operand" matching "b">
+                                                                                                                                        <Node called "level_1_expr" matching "b">
+                                                                                                                                            <Node matching "">
+                                                                                                                                            <RegexNode called "_0" matching "">
+                                                                                                                                            <Node called "primary" matching "b">
+                                                                                                                                                <Node called "designator" matching "b">
+                                                                                                                                                    <Node called "array_section" matching "b">
+                                                                                                                                                        <Node called "data_ref" matching "b">
+                                                                                                                                                            <Node called "part_ref" matching "b">
+                                                                                                                                                                <RegexNode called "name" matching "b">
+                                                                                                                                                                <Node matching "">
+                                                                                                                                                            <Node matching "">
+                                                                                                                                                        <Node matching "">
+                                                                                                                                        <Node matching "">
+                                                                                        <Node matching ", c">
+                                                                                            <RegexNode called "_0" matching "">
+                                                                                            <Node matching ",">
+                                                                                            <RegexNode called "_0" matching " ">
+                                                                                            <Node called "output_item" matching "c">
+                                                                                                <Node called "expr" matching "c">
+                                                                                                    <Node matching "">
+                                                                                                    <RegexNode called "_0" matching "">
+                                                                                                    <Node called "level_5_expr" matching "c">
+                                                                                                        <Node matching "">
+                                                                                                        <RegexNode called "_0" matching "">
+                                                                                                        <Node called "equiv_operand" matching "c">
+                                                                                                            <Node matching "">
+                                                                                                            <RegexNode called "_0" matching "">
+                                                                                                            <Node called "or_operand" matching "c">
+                                                                                                                <Node matching "">
+                                                                                                                <RegexNode called "_0" matching "">
+                                                                                                                <Node called "and_operand" matching "c">
+                                                                                                                    <Node matching "">
+                                                                                                                    <RegexNode called "_0" matching "">
+                                                                                                                    <Node called "level_4_expr" matching "c">
+                                                                                                                        <Node matching "">
+                                                                                                                        <RegexNode called "_0" matching "">
+                                                                                                                        <Node called "level_3_expr" matching "c">
+                                                                                                                            <Node matching "">
+                                                                                                                            <RegexNode called "_0" matching "">
+                                                                                                                            <Node called "level_2_expr" matching "c">
+                                                                                                                                <Node matching "">
+                                                                                                                                <RegexNode called "_0" matching "">
+                                                                                                                                <Node called "add_operand" matching "c">
+                                                                                                                                    <Node matching "">
+                                                                                                                                    <RegexNode called "_0" matching "">
+                                                                                                                                    <Node called "mult_operand" matching "c">
+                                                                                                                                        <Node called "level_1_expr" matching "c">
+                                                                                                                                            <Node matching "">
+                                                                                                                                            <RegexNode called "_0" matching "">
+                                                                                                                                            <Node called "primary" matching "c">
+                                                                                                                                                <Node called "designator" matching "c">
+                                                                                                                                                    <Node called "array_section" matching "c">
+                                                                                                                                                        <Node called "data_ref" matching "c">
+                                                                                                                                                            <Node called "part_ref" matching "c">
+                                                                                                                                                                <RegexNode called "name" matching "c">
+                                                                                                                                                                <Node matching "">
+                                                                                                                                                            <Node matching "">
+                                                                                                                                                        <Node matching "">
+                                                                                                                                        <Node matching "">
+                                                                        <RegexNode called "_0" matching "">
+                                                                        <RegexNode called "EOL" matching "
+                                                                        ">
+                                                    <Node called "end_do" matching "                end do
+                                                    ">
+                                                        <Node called "end_do_stmt" matching "                end do
+                                                        ">
+                                                            <RegexNode called "_0" matching "                ">
+                                                            <RegexNode matching "end">
+                                                            <RegexNode called "_0" matching " ">
+                                                            <RegexNode matching "do">
+                                                            <RegexNode called "_0" matching "">
+                                                            <Node matching "">
+                                                            <RegexNode called "_0" matching "">
+                                                            <RegexNode called "EOL" matching "
+                                                            ">
+                                <Node called "end_do" matching "            end do
+                                
+                                ">
+                                    <Node called "end_do_stmt" matching "            end do
+                                    
+                                    ">
+                                        <RegexNode called "_0" matching "            ">
+                                        <RegexNode matching "end">
+                                        <RegexNode called "_0" matching " ">
+                                        <RegexNode matching "do">
+                                        <RegexNode called "_0" matching "">
+                                        <Node matching "">
+                                        <RegexNode called "_0" matching "">
+                                        <RegexNode called "EOL" matching "
+                                        
+                                        ">
+                    <Node matching "">
+            <Node matching "        contains
+            
+                        function myadd(d, e) result(f)
+                            implicit none
+                            integer, intent(in) :: d, e
+                            integer :: f
+            
+            
+                            f = d + e
+            
+                        end function
+            
+            ">
+                <Node called "internal_subprogram_part" matching "        contains
+                
+                            function myadd(d, e) result(f)
+                                implicit none
+                                integer, intent(in) :: d, e
+                                integer :: f
+                
+                
+                                f = d + e
+                
+                            end function
+                
+                ">
+                    <Node called "contains_stmt" matching "        contains
+                    
+                    ">
+                        <RegexNode called "_0" matching "        ">
+                        <RegexNode matching "contains">
+                        <RegexNode called "_0" matching "">
+                        <RegexNode called "EOL" matching "
+                        
+                        ">
+                    <Node matching "            function myadd(d, e) result(f)
+                                    implicit none
+                                    integer, intent(in) :: d, e
+                                    integer :: f
+                    
+                    
+                                    f = d + e
+                    
+                                end function
+                    
+                    ">
+                        <Node called "internal_subprogram" matching "            function myadd(d, e) result(f)
+                                        implicit none
+                                        integer, intent(in) :: d, e
+                                        integer :: f
+                        
+                        
+                                        f = d + e
+                        
+                                    end function
+                        
+                        ">
+                            <Node called "function_subprogram" matching "            function myadd(d, e) result(f)
+                                            implicit none
+                                            integer, intent(in) :: d, e
+                                            integer :: f
+                            
+                            
+                                            f = d + e
+                            
+                                        end function
+                            
+                            ">
+                                <Node called "function_stmt" matching "            function myadd(d, e) result(f)
+                                ">
+                                    <RegexNode called "_0" matching "            ">
+                                    <Node matching "">
+                                    <RegexNode matching "function">
+                                    <RegexNode called "_1" matching " ">
+                                    <RegexNode called "name" matching "myadd">
+                                    <RegexNode called "_0" matching "">
+                                    <Node matching "(">
+                                    <RegexNode called "_0" matching "">
+                                    <Node matching "d, e">
+                                        <Node called "dummy_arg_name_list" matching "d, e">
+                                            <RegexNode called "name" matching "d">
+                                            <Node matching ", e">
+                                                <Node matching ", e">
+                                                    <RegexNode called "_0" matching "">
+                                                    <Node matching ",">
+                                                    <RegexNode called "_0" matching " ">
+                                                    <RegexNode called "name" matching "e">
+                                    <RegexNode called "_0" matching "">
+                                    <Node matching ")">
+                                    <Node matching " result(f)">
+                                        <Node matching " result(f)">
+                                            <RegexNode called "_0" matching " ">
+                                            <Node called "suffix" matching "result(f)">
+                                                <Node matching "result(f)">
+                                                    <RegexNode matching "result">
+                                                    <RegexNode called "_0" matching "">
+                                                    <Node matching "(">
+                                                    <RegexNode called "_0" matching "">
+                                                    <RegexNode called "name" matching "f">
+                                                    <RegexNode called "_0" matching "">
+                                                    <Node matching ")">
+                                                    <RegexNode called "_0" matching "">
+                                                    <Node matching "">
+                                    <RegexNode called "_0" matching "">
+                                    <RegexNode called "EOL" matching "
+                                    ">
+                                <Node matching "                implicit none
+                                                integer, intent(in) :: d, e
+                                                integer :: f
+                                
+                                
+                                ">
+                                    <Node called "specification_part" matching "                implicit none
+                                                    integer, intent(in) :: d, e
+                                                    integer :: f
+                                    
+                                    
+                                    ">
+                                        <Node matching "">
+                                        <Node matching "">
+                                        <Node matching "                implicit none
+                                        ">
+                                            <Node called "implicit_part" matching "                implicit none
+                                            ">
+                                                <Node called "implicit_stmt" matching "                implicit none
+                                                ">
+                                                    <Node matching "                implicit none
+                                                    ">
+                                                        <RegexNode called "_0" matching "                ">
+                                                        <RegexNode matching "implicit">
+                                                        <RegexNode called "_1" matching " ">
+                                                        <RegexNode matching "none">
+                                                        <RegexNode called "_0" matching "">
+                                                        <RegexNode called "EOL" matching "
+                                                        ">
+                                        <Node matching "                integer, intent(in) :: d, e
+                                                        integer :: f
+                                        
+                                        
+                                        ">
+                                            <Node called "declaration_construct" matching "                integer, intent(in) :: d, e
+                                            ">
+                                                <Node called "type_declaration_stmt" matching "                integer, intent(in) :: d, e
+                                                ">
+                                                    <RegexNode called "_0" matching "                ">
+                                                    <Node called "declaration_type_spec" matching "integer">
+                                                        <Node called "intrinsic_type_spec" matching "integer">
+                                                            <Node matching "integer">
+                                                                <RegexNode matching "integer">
+                                                                <RegexNode called "_0" matching "">
+                                                                <Node matching "">
+                                                    <Node matching ", intent(in) ::">
+                                                        <Node matching ", intent(in) ::">
+                                                            <Node matching ", intent(in)">
+                                                                <Node matching ", intent(in)">
+                                                                    <RegexNode called "_0" matching "">
+                                                                    <Node matching ",">
+                                                                    <RegexNode called "_0" matching " ">
+                                                                    <Node called "attr_spec" matching "intent(in)">
+                                                                        <Node matching "intent(in)">
+                                                                            <RegexNode matching "intent">
+                                                                            <Node matching "(">
+                                                                            <Node called "intent_spec" matching "in">
+                                                                                <RegexNode matching "in">
+                                                                            <Node matching ")">
+                                                            <RegexNode called "_0" matching " ">
+                                                            <Node matching "::">
+                                                    <RegexNode called "_0" matching " ">
+                                                    <Node called "entity_decl_list" matching "d, e">
+                                                        <Node called "entity_decl" matching "d">
+                                                            <Node matching "d">
+                                                                <RegexNode called "name" matching "d">
+                                                                <Node matching "">
+                                                                <Node matching "">
+                                                                <RegexNode called "_0" matching "">
+                                                                <Node matching "">
+                                                        <Node matching ", e">
+                                                            <Node matching ", e">
+                                                                <RegexNode called "_0" matching "">
+                                                                <Node matching ",">
+                                                                <RegexNode called "_0" matching " ">
+                                                                <Node called "entity_decl" matching "e">
+                                                                    <Node matching "e">
+                                                                        <RegexNode called "name" matching "e">
+                                                                        <Node matching "">
+                                                                        <Node matching "">
+                                                                        <RegexNode called "_0" matching "">
+                                                                        <Node matching "">
+                                                    <RegexNode called "_0" matching "">
+                                                    <RegexNode called "EOL" matching "
+                                                    ">
+                                            <Node called "declaration_construct" matching "                integer :: f
+                                            
+                                            
+                                            ">
+                                                <Node called "type_declaration_stmt" matching "                integer :: f
+                                                
+                                                
+                                                ">
+                                                    <RegexNode called "_0" matching "                ">
+                                                    <Node called "declaration_type_spec" matching "integer ">
+                                                        <Node called "intrinsic_type_spec" matching "integer ">
+                                                            <Node matching "integer ">
+                                                                <RegexNode matching "integer">
+                                                                <RegexNode called "_0" matching " ">
+                                                                <Node matching "">
+                                                    <Node matching "::">
+                                                        <Node matching "::">
+                                                            <Node matching "">
+                                                            <RegexNode called "_0" matching "">
+                                                            <Node matching "::">
+                                                    <RegexNode called "_0" matching " ">
+                                                    <Node called "entity_decl_list" matching "f">
+                                                        <Node called "entity_decl" matching "f">
+                                                            <Node matching "f">
+                                                                <RegexNode called "name" matching "f">
+                                                                <Node matching "">
+                                                                <Node matching "">
+                                                                <RegexNode called "_0" matching "">
+                                                                <Node matching "">
+                                                        <Node matching "">
+                                                    <RegexNode called "_0" matching "">
+                                                    <RegexNode called "EOL" matching "
+                                                    
+                                                    
+                                                    ">
+                                <Node matching "                f = d + e
+                                
+                                ">
+                                    <Node called "execution_part" matching "                f = d + e
+                                    
+                                    ">
+                                        <Node called "executable_construct" matching "                f = d + e
+                                        
+                                        ">
+                                            <Node called "action_stmt" matching "                f = d + e
+                                            
+                                            ">
+                                                <Node called "assignment_stmt" matching "                f = d + e
+                                                
+                                                ">
+                                                    <RegexNode called "_0" matching "                ">
+                                                    <Node called "designator" matching "f">
+                                                        <Node called "array_section" matching "f">
+                                                            <Node called "data_ref" matching "f">
+                                                                <Node called "part_ref" matching "f">
+                                                                    <RegexNode called "name" matching "f">
+                                                                    <Node matching "">
+                                                                <Node matching "">
+                                                            <Node matching "">
+                                                    <RegexNode called "_0" matching " ">
+                                                    <Node matching "=">
+                                                    <RegexNode called "_0" matching " ">
+                                                    <Node called "expr" matching "d + e">
+                                                        <Node matching "">
+                                                        <RegexNode called "_0" matching "">
+                                                        <Node called "level_5_expr" matching "d + e">
+                                                            <Node matching "">
+                                                            <RegexNode called "_0" matching "">
+                                                            <Node called "equiv_operand" matching "d + e">
+                                                                <Node matching "">
+                                                                <RegexNode called "_0" matching "">
+                                                                <Node called "or_operand" matching "d + e">
+                                                                    <Node matching "">
+                                                                    <RegexNode called "_0" matching "">
+                                                                    <Node called "and_operand" matching "d + e">
+                                                                        <Node matching "">
+                                                                        <RegexNode called "_0" matching "">
+                                                                        <Node called "level_4_expr" matching "d + e">
+                                                                            <Node matching "">
+                                                                            <RegexNode called "_0" matching "">
+                                                                            <Node called "level_3_expr" matching "d + e">
+                                                                                <Node matching "">
+                                                                                <RegexNode called "_0" matching "">
+                                                                                <Node called "level_2_expr" matching "d + e">
+                                                                                    <Node matching "d +">
+                                                                                        <Node matching "d +">
+                                                                                            <Node matching "d">
+                                                                                                <Node called "add_operand" matching "d">
+                                                                                                    <Node matching "">
+                                                                                                    <RegexNode called "_0" matching "">
+                                                                                                    <Node called "mult_operand" matching "d">
+                                                                                                        <Node called "level_1_expr" matching "d">
+                                                                                                            <Node matching "">
+                                                                                                            <RegexNode called "_0" matching "">
+                                                                                                            <Node called "primary" matching "d">
+                                                                                                                <Node called "designator" matching "d">
+                                                                                                                    <Node called "array_section" matching "d">
+                                                                                                                        <Node called "data_ref" matching "d">
+                                                                                                                            <Node called "part_ref" matching "d">
+                                                                                                                                <RegexNode called "name" matching "d">
+                                                                                                                                <Node matching "">
+                                                                                                                            <Node matching "">
+                                                                                                                        <Node matching "">
+                                                                                                        <Node matching "">
+                                                                                            <RegexNode called "_0" matching " ">
+                                                                                            <Node called "add_op" matching "+">
+                                                                                                <Node matching "+">
+                                                                                    <RegexNode called "_0" matching " ">
+                                                                                    <Node called "add_operand" matching "e">
+                                                                                        <Node matching "">
+                                                                                        <RegexNode called "_0" matching "">
+                                                                                        <Node called "mult_operand" matching "e">
+                                                                                            <Node called "level_1_expr" matching "e">
+                                                                                                <Node matching "">
+                                                                                                <RegexNode called "_0" matching "">
+                                                                                                <Node called "primary" matching "e">
+                                                                                                    <Node called "designator" matching "e">
+                                                                                                        <Node called "array_section" matching "e">
+                                                                                                            <Node called "data_ref" matching "e">
+                                                                                                                <Node called "part_ref" matching "e">
+                                                                                                                    <RegexNode called "name" matching "e">
+                                                                                                                    <Node matching "">
+                                                                                                                <Node matching "">
+                                                                                                            <Node matching "">
+                                                                                            <Node matching "">
+                                                    <RegexNode called "_0" matching "">
+                                                    <RegexNode called "EOL" matching "
+                                                    
+                                                    ">
+                                        <Node matching "">
+                                <Node matching "">
+                                <Node called "end_function_stmt" matching "            end function
+                                
+                                ">
+                                    <RegexNode called "_0" matching "            ">
+                                    <RegexNode matching "end">
+                                    <Node matching " function">
+                                        <Node matching " function">
+                                            <RegexNode called "_0" matching " ">
+                                            <RegexNode matching "function">
+                                            <Node matching "">
+                                    <RegexNode called "_0" matching "">
+                                    <RegexNode called "EOL" matching "
+                                    
+                                    ">
+            <Node called "end_program_stmt" matching "        end program
+            ">
+                <RegexNode called "_0" matching "        ">
+                <RegexNode matching "end">
+                <Node matching " program">
+                    <Node matching " program">
+                        <RegexNode called "_0" matching " ">
+                        <RegexNode matching "program">
+                        <Node matching "">
+                <RegexNode called "_0" matching "">
+                <RegexNode called "EOL" matching "
+                ">
