@@ -24,6 +24,9 @@ def main(argv=None):
     sub_parser.add_argument('targets', nargs='+', metavar='target',
             type=util.to_unicodes,
             help='target(s) to register')
+    sub_parser.add_argument('-D', metavar='subname',
+            type=util.to_unicodes, action='append',
+            help='names to add under the namespace of this registration')
     sub_parser.add_argument('-t', default='path',
             dest='type', type=util.to_unicodes,
             help='type of object (default %(default)r)')
